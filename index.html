@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blacklist Post Generator </title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .form-section {
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            margin-bottom: 1.5rem;
+            background-color: white;
+            transition: all 0.3s ease-in-out;
+        }
+        .form-section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            cursor: pointer;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .form-section-header:focus-visible {
+            outline: 2px solid #3b82f6;
+            outline-offset: 2px;
+            border-radius: 0.5rem;
+        }
+        .form-section-header.collapsed {
+            border-bottom-color: transparent;
+        }
+        .form-section-header h3 {
+            font-size: 1.125rem;
+            font-weight: 600;
+        }
+        .form-section-content {
+            padding: 1.5rem;
+            max-height: 2000px;
+            overflow: hidden;
+            transition: max-height 0.5s ease-in-out, padding 0.5s ease-in-out;
+        }
+        .form-section-content.collapsed {
+            max-height: 0;
+            padding-top: 0;
+            padding-bottom: 0;
+        }
+        .chevron-icon {
+            transition: transform 0.3s;
+        }
+        .chevron-icon.collapsed {
+            transform: rotate(-90deg);
+        }
+        .dynamic-item {
+            border: 1px dashed #cbd5e1;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            position: relative;
+            background-color: #f8fafc;
+        }
+        .item-controls {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            display: flex;
+            gap: 0.25rem;
+        }
+        .control-btn {
+            background-color: #64748b;
+            color: white;
+            border: none;
+            border-radius: 9999px;
+            width: 1.75rem; /* Increased size for touch targets */
+            height: 1.75rem; /* Increased size for touch targets */
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .control-btn.remove-btn { background-color: #ef4444; }
+        .control-btn:hover { background-color: #475569; }
+        .control-btn.remove-btn:hover { background-color: #dc2626; }
+
+        .preview-pane {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            line-height: 1.6;
+        }
+        .preview-pane a { color: #3b82f6; text-decoration: underline; }
+        .preview-pane strong, .preview-pane b { font-weight: bold; }
+        .copy-button { transition: all 0.2s ease-in-out; }
+        .copy-button:active { transform: scale(0.95); }
+        .copy-success { background-color: #22c55e !important; color: white !important; }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 100;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.5);
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            padding: 2rem;
+            border: 1px solid #888;
+            width: 90%;
+            max-width: 600px;
+            border-radius: 0.5rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            position: relative;
+        }
+        .close-button {
+            color: #aaa;
+            position: absolute;
+            top: 0.5rem;
+            right: 1rem;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        /* Toast Notification Styles */
+        #toast-container {
+            position: fixed;
+            top: 1.5rem;
+            right: 1.5rem;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        .toast {
+            padding: 1rem 1.5rem;
+            border-radius: 0.5rem;
+            color: white;
+            font-weight: 500;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            opacity: 0;
+            transform: translateX(100%);
+            transition: all 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        .toast.success { background-color: #22c55e; }
+        .toast.error { background-color: #ef4444; }
+
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <div id="toast-container"></div>
+    <div id="app-container"> <!-- Main container for ARIA hiding during modal view -->
+        <div class="container mx-auto p-4 md:p-8">
+            <header class="text-center mb-8">
+                <h1 class="text-4xl font-bold text-gray-900">Blacklist Post Generator (Local Storage)</h1>
+                <p class="text-lg text-gray-600 mt-2">Create, format, save, and load social media alerts.</p>
+            </header>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Form Column -->
+                <div class="lg:h-screen lg:overflow-y-auto pr-4 pb-16">
+                     <div class="flex flex-col space-y-2 mb-4 sticky top-0 bg-gray-50 py-2 z-10">
+                        <div class="grid grid-cols-2 lg:grid-cols-4 gap-2">
+                             <button id="newPost" class="w-full bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg shadow">New Post</button>
+                             <button id="loadPosts" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow">Load</button>
+                             <button id="saveOrUpdate" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg shadow">Save New</button>
+                             <button id="saveAsNew" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg shadow">Save As...</button>
+                        </div>
+                        <div id="editingStatus" class="text-center text-sm text-gray-600 font-semibold h-5" aria-live="polite"></div>
+                    </div>
+
+
+                    <div class="form-section shadow-md">
+                        <div class="form-section-header" role="button" aria-expanded="true" aria-controls="mainInfoContent" tabindex="0">
+                            <h3><span aria-hidden="true" class="text-xl mr-2">⚖️</span>Main Information</h3>
+                            <svg class="chevron-icon w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                        <div class="form-section-content" id="mainInfoContent">
+                            <div class="space-y-4">
+                                <div><label for="subjectName" class="block text-sm font-medium text-gray-700 mb-1">Subject's Full Name</label><input type="text" id="subjectName" class="w-full p-2 border rounded-md"></div>
+                                <div><label for="caseType" class="block text-sm font-medium text-gray-700 mb-1">Case Type</label><input type="text" id="caseType" placeholder="e.g., Animal Cruelty Case" class="w-full p-2 border rounded-md"></div>
+                                <div><label for="location" class="block text-sm font-medium text-gray-700 mb-1">Location</label><input type="text" id="location" placeholder="e.g., Puerto Rico" class="w-full p-2 border rounded-md"></div>
+                                <div><label for="updateDate" class="block text-sm font-medium text-gray-700 mb-1">Date of Update</label><input type="date" id="updateDate" class="w-full p-2 border rounded-md"></div>
+                                <div><label for="caseUpdate" class="block text-sm font-medium text-gray-700 mb-1">Key Updates & Orders</label><textarea id="caseUpdate" placeholder="Use '▪︎' for bullet points" rows="4" class="w-full p-2 border rounded-md"></textarea></div>
+                                <div><label for="trialDate" class="block text-sm font-medium text-gray-700 mb-1">Trial / Hearing Date</label><input type="text" id="trialDate" class="w-full p-2 border rounded-md"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section shadow-md">
+                         <div class="form-section-header" role="button" aria-expanded="true" aria-controls="individualsContent" tabindex="0">
+                            <h3><span aria-hidden="true" class="text-xl mr-2">👤</span>Blacklisted Individuals</h3>
+                            <svg class="chevron-icon w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                        <div class="form-section-content" id="individualsContent">
+                            <div id="individualsContainer" class="space-y-4"></div>
+                            <button id="addIndividual" class="mt-4 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg w-full">Add Individual</button>
+                        </div>
+                    </div>
+
+                    <div class="form-section shadow-md">
+                         <div class="form-section-header" role="button" aria-expanded="true" aria-controls="aliasesContent" tabindex="0">
+                            <h3><span aria-hidden="true" class="text-xl mr-2">🎭</span>Aliases</h3>
+                            <svg class="chevron-icon w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                        <div class="form-section-content" id="aliasesContent">
+                            <div id="aliasesContainer" class="space-y-4"></div>
+                            <button id="addAlias" class="mt-4 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg w-full">Add Alias</button>
+                        </div>
+                    </div>
+
+                    <div class="form-section shadow-md">
+                         <div class="form-section-header" role="button" aria-expanded="true" aria-controls="organizationsContent" tabindex="0">
+                            <h3><span aria-hidden="true" class="text-xl mr-2">🏢</span>Associated Organizations</h3>
+                            <svg class="chevron-icon w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                        <div class="form-section-content" id="organizationsContent">
+                            <div id="organizationsContainer" class="space-y-4"></div>
+                            <button id="addOrganization" class="mt-4 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg w-full">Add Organization/Group</button>
+                        </div>
+                    </div>
+
+                    <div class="form-section shadow-md">
+                         <div class="form-section-header" role="button" aria-expanded="true" aria-controls="legalRegContent" tabindex="0">
+                            <h3><span aria-hidden="true" class="text-xl mr-2">⚖️</span>Legal Registration</h3>
+                            <svg class="chevron-icon w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                        <div class="form-section-content" id="legalRegContent">
+                            <div id="legalRegistrationsContainer" class="space-y-4"></div>
+                            <button id="addLegalRegistration" class="mt-4 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg w-full">Add Legal Document</button>
+                        </div>
+                    </div>
+                    
+                    <div class="form-section shadow-md">
+                         <div class="form-section-header" role="button" aria-expanded="true" aria-controls="fraudAllegationsContent" tabindex="0">
+                            <h3><span aria-hidden="true" class="text-xl mr-2">💰</span>Allegations of Fraudulent Solicitations</h3>
+                            <svg class="chevron-icon w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                        <div class="form-section-content" id="fraudAllegationsContent">
+                            <div id="fraudulentSolicitationsContainer" class="space-y-4"></div>
+                            <button id="addFraudulentSolicitation" class="mt-4 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg w-full">Add Allegation</button>
+                        </div>
+                    </div>
+
+                    <div class="form-section shadow-md">
+                         <div class="form-section-header" role="button" aria-expanded="true" aria-controls="warningsContent" tabindex="0">
+                            <h3><span aria-hidden="true" class="text-xl mr-2">⚠️</span>Warnings and First-Hand Accounts</h3>
+                            <svg class="chevron-icon w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                        <div class="form-section-content" id="warningsContent">
+                            <div id="warningsAndAccountsContainer" class="space-y-4"></div>
+                            <button id="addWarningAndAccount" class="mt-4 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg w-full">Add Account</button>
+                        </div>
+                    </div>
+
+                    <div class="form-section shadow-md">
+                         <div class="form-section-header" role="button" aria-expanded="true" aria-controls="investigationsContent" tabindex="0">
+                            <h3><span aria-hidden="true" class="text-xl mr-2">🕵️</span>Animal Cruelty Investigations</h3>
+                            <svg class="chevron-icon w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                        <div class="form-section-content" id="investigationsContent">
+                            <div id="investigationsContainer" class="space-y-4"></div>
+                            <button id="addInvestigation" class="mt-4 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg w-full">Add Investigation</button>
+                        </div>
+                    </div>
+
+                    <div class="form-section shadow-md">
+                         <div class="form-section-header" role="button" aria-expanded="true" aria-controls="articlesContent" tabindex="0">
+                            <h3><span aria-hidden="true" class="text-xl mr-2">📰</span>News & Legal Documents</h3>
+                            <svg class="chevron-icon w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                        <div class="form-section-content" id="articlesContent">
+                            <div id="articlesContainer" class="space-y-4"></div>
+                            <button id="addArticle" class="mt-4 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg w-full">Add Article/Document</button>
+                        </div>
+                    </div>
+
+                     <div class="form-section shadow-md">
+                         <div class="form-section-header" role="button" aria-expanded="true" aria-controls="summaryContent" tabindex="0">
+                            <h3><span aria-hidden="true" class="text-xl mr-2">📝</span>Summary & Extra Details</h3>
+                            <svg class="chevron-icon w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                        <div class="form-section-content" id="summaryContent">
+                             <div class="space-y-4">
+                                <div><label for="backgroundInfo" class="block text-sm font-medium text-gray-700 mb-1">Background Information</label><textarea id="backgroundInfo" rows="6" class="w-full p-2 border rounded-md"></textarea></div>
+                                <div><label for="emergingReports" class="block text-sm font-medium text-gray-700 mb-1">Emerging Reports</label><textarea id="emergingReports" rows="3" class="w-full p-2 border rounded-md"></textarea></div>
+                                <div><label for="hashtags" class="block text-sm font-medium text-gray-700 mb-1">Hashtags</label><input type="text" id="hashtags" placeholder="#Hashtag1 #Hashtag2" class="w-full p-2 border rounded-md"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Preview Column -->
+                <div class="lg:h-screen lg:overflow-y-auto">
+                    <div class="bg-white p-6 rounded-lg shadow-lg sticky top-8">
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="text-2xl font-bold">Live Preview</h2>
+                            <span id="charCount" class="text-sm font-medium text-gray-500" aria-live="polite">0 characters</span>
+                        </div>
+                        <div id="preview" class="preview-pane bg-gray-100 p-4 rounded-md h-96 overflow-y-auto"></div>
+                        <button id="copyButton" class="copy-button mt-4 w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg text-lg shadow-md">
+                            Copy to Clipboard
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Load Posts Modal -->
+    <div id="loadPostsModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="loadPostsModalTitle">
+        <div class="modal-content">
+            <button class="close-button" id="closeLoadModal" aria-label="Close modal">&times;</button>
+            <h2 id="loadPostsModalTitle" class="text-2xl font-bold mb-4">Load a Saved Post</h2>
+            <div id="savedPostsList" class="space-y-2 max-h-96 overflow-y-auto">
+                <p>No saved posts found.</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Confirmation Modal -->
+    <div id="confirmModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="confirmModalTitle">
+        <div class="modal-content">
+            <h2 id="confirmModalTitle" class="text-xl font-bold mb-4">Confirm Action</h2>
+            <p id="confirmModalText" class="mb-6">Are you sure?</p>
+            <div class="flex justify-end space-x-4">
+                <button id="confirmCancelBtn" class="px-4 py-2 bg-gray-300 hover:bg-gray-400 rounded-md">Cancel</button>
+                <button id="confirmOkBtn" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- App State ---
+        let currentPostId = null;
+        let currentPostName = 'New Post';
+        const LOCAL_STORAGE_KEY = 'blacklistGeneratorPosts';
+
+        // --- DOM Elements ---
+        const appContainer = document.getElementById('app-container');
+        const form = document.querySelector('body');
+        const preview = document.getElementById('preview');
+        const charCount = document.getElementById('charCount');
+        const editingStatus = document.getElementById('editingStatus');
+
+        const fields = {
+            subjectName: document.getElementById('subjectName'),
+            caseType: document.getElementById('caseType'),
+            location: document.getElementById('location'),
+            updateDate: document.getElementById('updateDate'),
+            caseUpdate: document.getElementById('caseUpdate'),
+            trialDate: document.getElementById('trialDate'),
+            backgroundInfo: document.getElementById('backgroundInfo'),
+            emergingReports: document.getElementById('emergingReports'),
+            hashtags: document.getElementById('hashtags'),
+        };
+
+        const containers = {
+            individuals: document.getElementById('individualsContainer'),
+            aliases: document.getElementById('aliasesContainer'),
+            organizations: document.getElementById('organizationsContainer'),
+            legalRegistrations: document.getElementById('legalRegistrationsContainer'),
+            fraudulentSolicitations: document.getElementById('fraudulentSolicitationsContainer'),
+            warningsAndAccounts: document.getElementById('warningsAndAccountsContainer'),
+            investigations: document.getElementById('investigationsContainer'),
+            articles: document.getElementById('articlesContainer'),
+        };
+
+        const buttons = {
+            addIndividual: document.getElementById('addIndividual'),
+            addAlias: document.getElementById('addAlias'),
+            addOrganization: document.getElementById('addOrganization'),
+            addLegalRegistration: document.getElementById('addLegalRegistration'),
+            addFraudulentSolicitation: document.getElementById('addFraudulentSolicitation'),
+            addWarningAndAccount: document.getElementById('addWarningAndAccount'),
+            addInvestigation: document.getElementById('addInvestigation'),
+            addArticle: document.getElementById('addArticle'),
+            newPost: document.getElementById('newPost'),
+            copy: document.getElementById('copyButton'),
+            saveOrUpdate: document.getElementById('saveOrUpdate'),
+            saveAsNew: document.getElementById('saveAsNew'),
+            load: document.getElementById('loadPosts'),
+        };
+        
+        const loadPostsModal = document.getElementById('loadPostsModal');
+        const confirmModal = document.getElementById('confirmModal');
+        const closeLoadModalBtn = document.getElementById('closeLoadModal');
+        const savedPostsList = document.getElementById('savedPostsList');
+
+        // --- Debounce Function ---
+        function debounce(func, delay) { let timeoutId; return function(...args) { clearTimeout(timeoutId); timeoutId = setTimeout(() => { func.apply(this, args); }, delay); }; }
+        const debouncedUpdatePreview = debounce(updatePreview, 250);
+
+        // --- Event Listeners ---
+        form.addEventListener('input', debouncedUpdatePreview);
+        Object.values(buttons).forEach(btn => btn?.addEventListener('click', handleButtonClick));
+        document.querySelectorAll('.form-section-header').forEach(header => {
+            header.addEventListener('click', toggleSection);
+            header.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleSection(e); } });
+        });
+        document.addEventListener('click', handleDynamicItemControls);
+        
+        // --- Modal Listeners ---
+        function setupModalListeners(modal, closeBtn) { closeBtn.addEventListener('click', () => closeModal(modal)); }
+        setupModalListeners(loadPostsModal, closeLoadModalBtn);
+        document.getElementById('confirmCancelBtn').addEventListener('click', () => closeModal(confirmModal));
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                if (loadPostsModal.style.display === 'flex') closeModal(loadPostsModal);
+                if (confirmModal.style.display === 'flex') closeModal(confirmModal);
+            }
+        });
+
+        // --- Event Handlers ---
+        function handleButtonClick(e) {
+            switch (e.currentTarget.id) {
+                case 'addIndividual': addDynamicItem('individual'); break;
+                case 'addAlias': addDynamicItem('alias'); break;
+                case 'addOrganization': addDynamicItem('organization'); break;
+                case 'addLegalRegistration': addDynamicItem('legalRegistration'); break;
+                case 'addFraudulentSolicitation': addDynamicItem('fraudulentSolicitation'); break;
+                case 'addWarningAndAccount': addDynamicItem('warningAndAccount'); break;
+                case 'addInvestigation': addDynamicItem('investigation'); break;
+                case 'addArticle': addDynamicItem('article'); break;
+                case 'newPost': clearForm(); break;
+                case 'copyButton': copyToClipboard(); break;
+                case 'saveOrUpdate': saveOrUpdatePost(); break;
+                case 'saveAsNew': saveNewPost(true); break;
+                case 'loadPosts': openLoadModal(); break;
+            }
+        }
+        
+        function handleDynamicItemControls(e) {
+            const button = e.target.closest('.control-btn');
+            if (!button) return;
+            const item = button.closest('.dynamic-item');
+            const container = item.parentElement;
+            if (button.getAttribute('aria-label') === 'Remove item') { item.remove(); } 
+            else if (button.getAttribute('aria-label') === 'Move item up') { const prevSibling = item.previousElementSibling; if (prevSibling) container.insertBefore(item, prevSibling); } 
+            else if (button.getAttribute('aria-label') === 'Move item down') { const nextSibling = item.nextElementSibling; if (nextSibling) container.insertBefore(nextSibling, item); }
+            debouncedUpdatePreview();
+        }
+
+        function toggleSection(e) {
+            const header = e.currentTarget;
+            const content = document.getElementById(header.getAttribute('aria-controls'));
+            const icon = header.querySelector('.chevron-icon');
+            const isExpanded = header.getAttribute('aria-expanded') === 'true';
+            header.setAttribute('aria-expanded', !isExpanded);
+            header.classList.toggle('collapsed');
+            content.classList.toggle('collapsed');
+            icon.classList.toggle('collapsed');
+        }
+
+        // --- Dynamic Item Management ---
+        const itemTemplates = {
+            individual: (id) => `<div><label for="individual-name-${id}" class="block text-sm font-medium text-gray-700 mb-1">Full Name</label><input type="text" id="individual-name-${id}" class="w-full p-2 border rounded-md mb-2 individual-name"></div><div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-2"><div><label for="individual-dob-${id}" class="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label><input type="text" id="individual-dob-${id}" class="w-full p-2 border rounded-md individual-dob"></div><div><label for="individual-phone-${id}" class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label><input type="text" id="individual-phone-${id}" class="w-full p-2 border rounded-md individual-phone"></div></div><div><label for="individual-email-${id}" class="block text-sm font-medium text-gray-700 mb-1">Email Address</label><input type="text" id="individual-email-${id}" class="w-full p-2 border rounded-md mb-2 individual-email"></div><div><label for="individual-address-${id}" class="block text-sm font-medium text-gray-700 mb-1">Last Known Address</label><textarea id="individual-address-${id}" rows="2" class="w-full p-2 border rounded-md mb-2 individual-address"></textarea></div><h4 class="font-semibold text-sm mt-3 mb-1 text-gray-600">Social Media Links</h4><div class="space-y-2"><input type="text" placeholder="Facebook URL" class="w-full p-2 border rounded-md individual-fb-link" aria-label="Individual Facebook URL"><input type="text" placeholder="Instagram URL" class="w-full p-2 border rounded-md individual-ig-link" aria-label="Individual Instagram URL"><input type="text" placeholder="X (Twitter) URL" class="w-full p-2 border rounded-md individual-x-link" aria-label="Individual X (Twitter) URL"><input type="text" placeholder="Other URLs (comma-sep)" class="w-full p-2 border rounded-md individual-other-links" aria-label="Individual Other URLs"></div>`,
+            alias: (id) => `<div><label for="alias-name-${id}" class="block text-sm font-medium text-gray-700 mb-1">Alias Name</label><input type="text" id="alias-name-${id}" class="w-full p-2 border rounded-md alias-name"></div>`,
+            organization: (id) => `<div><label for="org-name-${id}" class="block text-sm font-medium text-gray-700 mb-1">Organization Name</label><input type="text" id="org-name-${id}" class="w-full p-2 border rounded-md mb-2 org-name"></div><div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-2"><div><label for="org-ein-${id}" class="block text-sm font-medium text-gray-700 mb-1">EIN</label><input type="text" id="org-ein-${id}" class="w-full p-2 border rounded-md org-ein"></div><div><label for="org-license-${id}" class="block text-sm font-medium text-gray-700 mb-1">License #</label><input type="text" id="org-license-${id}" class="w-full p-2 border rounded-md org-license"></div></div><div><label for="org-record-${id}" class="block text-sm font-medium text-gray-700 mb-1">Official Record Link</label><input type="text" id="org-record-${id}" class="w-full p-2 border rounded-md mb-2 org-record-link"></div><div><label for="org-status-${id}" class="block text-sm font-medium text-gray-700 mb-1">Status</label><input type="text" id="org-status-${id}" placeholder="e.g., Active, CLOSED" class="w-full p-2 border rounded-md mb-2 org-status"></div><h4 class="font-semibold text-sm mt-3 mb-1 text-gray-600">Links</h4><div class="grid grid-cols-1 md:grid-cols-2 gap-2"><input type="text" placeholder="Facebook URL" class="w-full p-2 border rounded-md org-fb-link" aria-label="Organization Facebook URL"><input type="text" placeholder="Instagram URL" class="w-full p-2 border rounded-md org-ig-link" aria-label="Organization Instagram URL"><input type="text" placeholder="X (Twitter) URL" class="w-full p-2 border rounded-md org-x-link" aria-label="Organization X (Twitter) URL"><input type="text" placeholder="Website URL" class="w-full p-2 border rounded-md org-website-link" aria-label="Organization Website URL"></div><div class="mt-2"><input type="text" placeholder="Other URLs (comma-sep)" class="w-full p-2 border rounded-md org-other-links" aria-label="Organization Other URLs"></div>`,
+            legalRegistration: (id) => `<div><label for="legal-title-${id}" class="block text-sm font-medium text-gray-700 mb-1">Document Title</label><input type="text" id="legal-title-${id}" class="w-full p-2 border rounded-md mb-2 legal-registration-title"></div><div><label for="legal-url-${id}" class="block text-sm font-medium text-gray-700 mb-1">URL</label><input type="text" id="legal-url-${id}" class="w-full p-2 border rounded-md mb-2 legal-registration-url"></div>`,
+            fraudulentSolicitation: (id) => `<div><label for="fraud-text-${id}" class="block text-sm font-medium text-gray-700 mb-1">Allegation Details</label><textarea id="fraud-text-${id}" rows="3" class="w-full p-2 border rounded-md fraudulent-solicitation-text"></textarea></div>`,
+            warningAndAccount: (id) => `<div><label for="warning-text-${id}" class="block text-sm font-medium text-gray-700 mb-1">Account/Warning Details</label><textarea id="warning-text-${id}" rows="3" class="w-full p-2 border rounded-md warning-account-text"></textarea></div>`,
+            investigation: (id) => `<div><label for="inv-title-${id}" class="block text-sm font-medium text-gray-700 mb-1">Title</label><input type="text" id="inv-title-${id}" class="w-full p-2 border rounded-md mb-2 investigation-title"></div><div><label for="inv-url-${id}" class="block text-sm font-medium text-gray-700 mb-1">URL</label><input type="text" id="inv-url-${id}" class="w-full p-2 border rounded-md mb-2 investigation-url"></div>`,
+            article: (id) => `<div><label for="art-title-${id}" class="block text-sm font-medium text-gray-700 mb-1">Title</label><input type="text" id="art-title-${id}" class="w-full p-2 border rounded-md mb-2 article-title"></div><div><label for="art-url-${id}" class="block text-sm font-medium text-gray-700 mb-1">URL</label><input type="text" id="art-url-${id}" class="w-full p-2 border rounded-md mb-2 article-url"></div>`
+        };
+
+        function addDynamicItem(type) {
+            const containerKey = {
+                'alias': 'aliases', 'legalRegistration': 'legalRegistrations', 'fraudulentSolicitation': 'fraudulentSolicitations', 'warningAndAccount': 'warningsAndAccounts'
+            }[type] || `${type}s`;
+            const container = containers[containerKey];
+            const uniqueId = `${type}-${Date.now()}`;
+            const div = document.createElement('div');
+            div.className = 'dynamic-item';
+            div.innerHTML = `<div class="item-controls"><button class="control-btn up-btn" aria-label="Move item up">▲</button><button class="control-btn down-btn" aria-label="Move item down">▼</button><button class="control-btn remove-btn" aria-label="Remove item">X</button></div>${itemTemplates[type](uniqueId)}`;
+            container.appendChild(div);
+            debouncedUpdatePreview();
+        }
+
+        // --- Core Logic: Preview & Formatting ---
+        function updatePreview() { let post = generatePostText(); preview.innerHTML = renderMarkdown(post); charCount.textContent = `${post.length} characters`; }
+        function generatePostText() {
+            let post = '';
+            if (fields.subjectName.value || fields.caseType.value) { post += `**𝐔𝐏𝐃𝐀𝐓𝐄: ${fields.subjectName.value} ${fields.caseType.value} – ${fields.location.value}**\n\n`; }
+            if (fields.updateDate.value) { post += `As of **${new Date(fields.updateDate.value + 'T00:00:00').toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }).toUpperCase()}**, ...\n`; }
+            if (fields.caseUpdate.value) { post += `${fields.caseUpdate.value}\n\n`; }
+            if (fields.trialDate.value) { post += `**Her 𝐉𝐮𝐫𝐲 𝐭𝐫𝐢𝐚𝐥 𝐢𝐬 𝐬𝐞𝐭 𝐟𝐨𝐫 ${fields.trialDate.value}.**\n\n`; }
+
+            const individuals = containers.individuals.querySelectorAll('.dynamic-item');
+            const aliases = Array.from(containers.aliases.querySelectorAll('.alias-name')).map(input => input.value.trim()).filter(Boolean);
+            const organizations = containers.organizations.querySelectorAll('.dynamic-item');
+            if (individuals.length > 0 || organizations.length > 0) { post += '▀▄▀▄ **𝑩𝑳𝑨𝑪𝑲𝑳𝑰𝑺𝑻𝑬𝑫** ▄▀▄▀\n\n'; }
+            
+            individuals.forEach(ind => {
+                const name = ind.querySelector('.individual-name').value, dob = ind.querySelector('.individual-dob').value, phone = ind.querySelector('.individual-phone').value, email = ind.querySelector('.individual-email').value, address = ind.querySelector('.individual-address').value;
+                const fbLink = ind.querySelector('.individual-fb-link').value, igLink = ind.querySelector('.individual-ig-link').value, xLink = ind.querySelector('.individual-x-link').value, otherLinks = ind.querySelector('.individual-other-links').value.split(',').map(l => l.trim()).filter(l => l);
+                if (name) post += `**${name}**\n`; if (dob) post += `DOB: ${dob}\n`; if (address) post += `Address: ${address}\n`; if (phone) post += `Phone: ${phone}\n`; if (email) post += `Email: ${email}\n`;
+                if (fbLink) post += `[Facebook](${fbLink})\n`; if (igLink) post += `[Instagram](${igLink})\n`; if (xLink) post += `[X (Twitter)](${xLink})\n`;
+                otherLinks.forEach(link => { let linkName = 'Link'; try { linkName = new URL(link).hostname.replace('www.', ''); } catch (e) {} post += `[${linkName}](${link})\n`; });
+                post += '\n---\n\n';
+            });
+            
+            if (aliases.length > 0) { post += `**She goes by the names of ${aliases.join(', ')} and uses other fake accounts and names.**\n\n---\n\n`; }
+            
+            organizations.forEach(org => {
+                const name = org.querySelector('.org-name').value; if (!name) return;
+                post += `**${name}**\n`;
+                const ein = org.querySelector('.org-ein').value, license = org.querySelector('.org-license').value, recordLink = org.querySelector('.org-record-link').value, status = org.querySelector('.org-status').value;
+                const fbLink = org.querySelector('.org-fb-link').value, igLink = org.querySelector('.org-ig-link').value, xLink = org.querySelector('.org-x-link').value, websiteLink = org.querySelector('.org-website-link').value;
+                const otherLinks = org.querySelector('.org-other-links').value.split(',').map(l => l.trim()).filter(l => l);
+                if (ein) post += `EIN: ${ein}\n`; if (license) post += `License: ${license}\n`; if (recordLink) post += `[Official Record](${recordLink})\n`; if (status) post += `Status: **${status}**\n`;
+                if (fbLink) post += `[FB](${fbLink})\n`; if (igLink) post += `[IG](${igLink})\n`; if (xLink) post += `[X (Twitter)](${xLink})\n`; if (websiteLink) post += `[Website](${websiteLink})\n`;
+                otherLinks.forEach(link => { let linkName = 'Link'; try { linkName = new URL(link).hostname.replace('www.', ''); } catch (e) {} post += `[${linkName}](${link})\n`; });
+                post += '\n---\n\n';
+            });
+
+            const legalRegs = containers.legalRegistrations.querySelectorAll('.dynamic-item');
+            if (legalRegs.length > 0) { post += '**Legal Registration**\n'; legalRegs.forEach(item => { const title = item.querySelector('.legal-registration-title').value, url = item.querySelector('.legal-registration-url').value; if (title && url) post += `* [${title}](${url})\n`; }); post += '\n---\n\n'; }
+            
+            const fraudAllegations = Array.from(containers.fraudulentSolicitations.querySelectorAll('.fraudulent-solicitation-text')).map(input => input.value.trim()).filter(Boolean);
+            if (fraudAllegations.length > 0) { post += '**Allegations of Fraudulent Solicitations**\n'; fraudAllegations.forEach(text => { post += `* ${text}\n`; }); post += '\n---\n\n'; }
+
+            const warnings = Array.from(containers.warningsAndAccounts.querySelectorAll('.warning-account-text')).map(input => input.value.trim()).filter(Boolean);
+            if (warnings.length > 0) { post += '**Warnings and First-Hand Accounts**\n'; warnings.forEach(text => { post += `* ${text}\n`; }); post += '\n---\n\n'; }
+
+            const investigations = containers.investigations.querySelectorAll('.dynamic-item');
+            if (investigations.length > 0) { post += '**Animal Cruelty Investigations**\n'; investigations.forEach(inv => { const title = inv.querySelector('.investigation-title').value, url = inv.querySelector('.investigation-url').value; if (title && url) post += `* [${title}](${url})\n`; }); post += '\n---\n\n'; }
+            
+            const articles = containers.articles.querySelectorAll('.dynamic-item');
+            if (articles.length > 0) { post += '**News Articles and Legal Documents**\n'; articles.forEach(art => { const title = art.querySelector('.article-title').value, url = art.querySelector('.article-url').value; if (title && url) post += `* [${title}](${url})\n`; }); post += '\n'; }
+
+            if (fields.backgroundInfo.value) { post += `${fields.backgroundInfo.value}\n\n`; }
+            if (fields.emergingReports.value) { post += `**MORE REPORTS EMERGING. ALLEGEDLY, ${fields.emergingReports.value.toUpperCase()}**\n\n`; }
+            
+            post += '### Disclaimer:\n***The information shared in this post is based on publicly available information...***\n\n';
+            if (fields.hashtags.value) { post += `${fields.hashtags.value}\n`; }
+            
+            return post;
+        }
+
+        function renderMarkdown(text) { return text.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\*\*\*(.*?)\*\*\*/g, '<strong><em>$1</em></strong>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\*(.*?)\*/g, '<em>$1</em>').replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>').replace(/^### (.*$)/gim, '<h3>$1</h3>').replace(/^## (.*$)/gim, '<h2>$1</h2>').replace(/^# (.*$)/gim, '<h1>$1</h1>').replace(/^\* (.*$)/gim, '<li>$1</li>').replace(/\n/g, '<br>'); }
+        
+        // --- Local Storage Functions ---
+        function getPosts() { try { return JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY)) || []; } catch (e) { return []; } }
+        function savePosts(posts) { localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(posts)); }
+        function saveOrUpdatePost() { if (currentPostId) { updatePost(); } else { saveNewPost(); } }
+        function saveNewPost(isSaveAs = false) { const defaultName = fields.subjectName.value || "Untitled Post"; const postName = prompt("Enter a name for this new post:", isSaveAs ? `${currentPostName} (Copy)` : defaultName); if (!postName) return; currentPostName = postName; const data = getFormData(); data.savedAt = new Date().toISOString(); data.id = crypto.randomUUID(); currentPostId = data.id; const posts = getPosts(); posts.push(data); savePosts(posts); showToast(`Post "${postName}" saved.`, 'success'); updateUIForState(); }
+        function updatePost() { if (!currentPostId) return; const data = getFormData(); data.savedAt = new Date().toISOString(); data.id = currentPostId; let posts = getPosts(); const postIndex = posts.findIndex(p => p.id === currentPostId); if (postIndex > -1) { posts[postIndex] = data; savePosts(posts); showToast(`Post "${data.name}" updated.`, 'success'); } else { saveNewPost(); } }
+        
+        function openLoadModal() {
+            const posts = getPosts();
+            savedPostsList.innerHTML = '';
+            if (posts.length === 0) { savedPostsList.innerHTML = '<p>No saved posts found.</p>'; openModal(loadPostsModal); return; }
+            posts.sort((a, b) => new Date(b.savedAt) - new Date(a.savedAt));
+            posts.forEach(post => {
+                const postElement = document.createElement('div'); postElement.className = 'p-2 border rounded-md hover:bg-gray-100 flex justify-between items-center';
+                const textContainer = document.createElement('div'); textContainer.className = "flex-grow cursor-pointer"; textContainer.innerHTML = `<span>${post.name}</span> <span class="text-xs text-gray-500 ml-2">${new Date(post.savedAt).toLocaleDateString()}</span>`; textContainer.onclick = () => loadSpecificPost(post.id);
+                const deleteBtn = document.createElement('button'); deleteBtn.innerHTML = '&#x1F5D1;'; deleteBtn.className = 'ml-4 p-1 text-red-500 hover:text-red-700'; deleteBtn.setAttribute('aria-label', `Delete post titled ${post.name}`); deleteBtn.onclick = (e) => { e.stopPropagation(); deletePost(post.id, post.name); };
+                postElement.appendChild(textContainer); postElement.appendChild(deleteBtn); savedPostsList.appendChild(postElement);
+            });
+            openModal(loadPostsModal);
+        }
+        
+        function loadSpecificPost(postId) { const postToLoad = getPosts().find(p => p.id === postId); if (postToLoad) { currentPostId = postId; populateForm(postToLoad); closeModal(loadPostsModal); showToast(`Loaded post: ${postToLoad.name}`, 'success'); } }
+        function deletePost(postId, postName) { showConfirmation(`Are you sure you want to delete "${postName}"? This cannot be undone.`, () => { let posts = getPosts(); const updatedPosts = posts.filter(p => p.id !== postId); savePosts(updatedPosts); if (currentPostId === postId) { clearForm(); } openLoadModal(); showToast(`Post "${postName}" deleted.`, 'success'); }); }
+
+        // --- Utility Functions ---
+        function copyToClipboard() { const textToCopy = generatePostText(); const textArea = document.createElement('textarea'); textArea.value = textToCopy; document.body.appendChild(textArea); textArea.select(); try { document.execCommand('copy'); showToast('Copied to clipboard!', 'success'); } catch (err) { showToast('Copy failed.', 'error'); } document.body.removeChild(textArea); }
+        function clearForm() { Object.values(fields).forEach(el => el.value = ''); Object.values(containers).forEach(c => c.innerHTML = ''); currentPostId = null; currentPostName = 'New Post'; updateUIForState(); updatePreview(); }
+        function getFormData() {
+            const data = { name: currentPostName };
+            for (const key in fields) { data[key] = fields[key].value; }
+            data.individuals = Array.from(containers.individuals.querySelectorAll('.dynamic-item')).map(item => ({ name: item.querySelector('.individual-name').value, dob: item.querySelector('.individual-dob').value, phone: item.querySelector('.individual-phone').value, email: item.querySelector('.individual-email').value, address: item.querySelector('.individual-address').value, fbLink: item.querySelector('.individual-fb-link').value, igLink: item.querySelector('.individual-ig-link').value, xLink: item.querySelector('.individual-x-link').value, otherLinks: item.querySelector('.individual-other-links').value, }));
+            data.aliases = Array.from(containers.aliases.querySelectorAll('.dynamic-item')).map(item => ({ name: item.querySelector('.alias-name').value }));
+            data.organizations = Array.from(containers.organizations.querySelectorAll('.dynamic-item')).map(item => ({ name: item.querySelector('.org-name').value, ein: item.querySelector('.org-ein').value, license: item.querySelector('.org-license').value, recordLink: item.querySelector('.org-record-link').value, status: item.querySelector('.org-status').value, fbLink: item.querySelector('.org-fb-link').value, igLink: item.querySelector('.org-ig-link').value, xLink: item.querySelector('.org-x-link').value, websiteLink: item.querySelector('.org-website-link').value, otherLinks: item.querySelector('.org-other-links').value, }));
+            data.legalRegistrations = Array.from(containers.legalRegistrations.querySelectorAll('.dynamic-item')).map(item => ({ title: item.querySelector('.legal-registration-title').value, url: item.querySelector('.legal-registration-url').value }));
+            data.fraudulentSolicitations = Array.from(containers.fraudulentSolicitations.querySelectorAll('.dynamic-item')).map(item => ({ text: item.querySelector('.fraudulent-solicitation-text').value }));
+            data.warningsAndAccounts = Array.from(containers.warningsAndAccounts.querySelectorAll('.dynamic-item')).map(item => ({ text: item.querySelector('.warning-account-text').value }));
+            data.investigations = Array.from(containers.investigations.querySelectorAll('.dynamic-item')).map(item => ({ title: item.querySelector('.investigation-title').value, url: item.querySelector('.investigation-url').value }));
+            data.articles = Array.from(containers.articles.querySelectorAll('.dynamic-item')).map(item => ({ title: item.querySelector('.article-title').value, url: item.querySelector('.article-url').value }));
+            return data;
+        }
+        function populateForm(data) {
+            clearForm();
+            for (const key in fields) { if (data[key]) fields[key].value = data[key]; }
+            data.individuals?.forEach(ind => { addDynamicItem('individual'); const item = containers.individuals.lastElementChild; item.querySelector('.individual-name').value = ind.name || ''; item.querySelector('.individual-dob').value = ind.dob || ''; item.querySelector('.individual-phone').value = ind.phone || ''; item.querySelector('.individual-email').value = ind.email || ''; item.querySelector('.individual-address').value = ind.address || ''; item.querySelector('.individual-fb-link').value = ind.fbLink || ''; item.querySelector('.individual-ig-link').value = ind.igLink || ''; item.querySelector('.individual-x-link').value = ind.xLink || ''; item.querySelector('.individual-other-links').value = ind.otherLinks || ''; });
+            data.aliases?.forEach(alias => { addDynamicItem('alias'); containers.aliases.lastElementChild.querySelector('.alias-name').value = alias.name; });
+            data.organizations?.forEach(org => { addDynamicItem('organization'); const item = containers.organizations.lastElementChild; item.querySelector('.org-name').value = org.name || ''; item.querySelector('.org-ein').value = org.ein || ''; item.querySelector('.org-license').value = org.license || ''; item.querySelector('.org-record-link').value = org.recordLink || ''; item.querySelector('.org-status').value = org.status || ''; item.querySelector('.org-fb-link').value = org.fbLink || ''; item.querySelector('.org-ig-link').value = org.igLink || ''; item.querySelector('.org-x-link').value = org.xLink || ''; item.querySelector('.org-website-link').value = org.websiteLink || ''; item.querySelector('.org-other-links').value = org.otherLinks || ''; });
+            data.legalRegistrations?.forEach(reg => { addDynamicItem('legalRegistration'); const item = containers.legalRegistrations.lastElementChild; item.querySelector('.legal-registration-title').value = reg.title; item.querySelector('.legal-registration-url').value = reg.url; });
+            data.fraudulentSolicitations?.forEach(sol => { addDynamicItem('fraudulentSolicitation'); containers.fraudulentSolicitations.lastElementChild.querySelector('.fraudulent-solicitation-text').value = sol.text; });
+            data.warningsAndAccounts?.forEach(warn => { addDynamicItem('warningAndAccount'); containers.warningsAndAccounts.lastElementChild.querySelector('.warning-account-text').value = warn.text; });
+            data.investigations?.forEach(inv => { addDynamicItem('investigation'); const item = containers.investigations.lastElementChild; item.querySelector('.investigation-title').value = inv.title; item.querySelector('.investigation-url').value = inv.url; });
+            data.articles?.forEach(art => { addDynamicItem('article'); const item = containers.articles.lastElementChild; item.querySelector('.article-title').value = art.title; item.querySelector('.article-url').value = art.url; });
+            currentPostName = data.name;
+            updateUIForState();
+            updatePreview();
+        }
+
+        // --- Toast & Modal Helpers ---
+        function showToast(message, type = 'success') { const toastContainer = document.getElementById('toast-container'); const toast = document.createElement('div'); toast.className = `toast ${type}`; toast.textContent = message; toastContainer.appendChild(toast); setTimeout(() => { toast.classList.add('show'); }, 10); setTimeout(() => { toast.classList.remove('show'); toast.addEventListener('transitionend', () => toast.remove()); }, 4000); }
+        function showConfirmation(message, onConfirm) { document.getElementById('confirmModalText').textContent = message; openModal(confirmModal); document.getElementById('confirmOkBtn').onclick = () => { closeModal(confirmModal); onConfirm(); }; }
+        function openModal(modalElement) { modalElement.style.display = 'flex'; appContainer.setAttribute('aria-hidden', 'true'); const focusableElements = modalElement.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'); if (focusableElements.length) focusableElements[0].focus(); }
+        function closeModal(modalElement) { modalElement.style.display = 'none'; appContainer.removeAttribute('aria-hidden'); }
+
+        // --- Initial Load ---
+        clearForm();
+        updateUIForState();
+        updatePreview();
+    });
+    </script>
+</body>
+</html>
+
