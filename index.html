@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Blacklist Post Generator </title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -91,6 +92,17 @@
         .modal-list-item-text { flex-grow: 1; cursor: pointer; }
         .modal-list-item-controls { display: flex; gap: 0.5rem; }
         .modal-control-btn { background: none; border: none; cursor: pointer; font-size: 1.25rem; padding: 0.25rem; }
+        .ai-btn { padding: 0.25rem 0.5rem; font-size: 0.875rem; line-height: 1.25rem; }
+        .ai-btn .spinner { display: none; }
+        .ai-btn.loading .spinner { display: inline-block; }
+        .ai-btn.loading .btn-text { display: none; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .spinner { animation: spin 1s linear infinite; }
+        .dropdown { position: relative; display: inline-block; }
+        .dropdown-content { display: none; position: absolute; background-color: var(--bg-secondary); min-width: 160px; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2); z-index: 1; border-radius: 0.375rem; border: 1px solid var(--border-color); bottom: 100%; right: 0; margin-bottom: 0.5rem;}
+        .dropdown-content a { color: var(--text-primary); padding: 12px 16px; text-decoration: none; display: block; font-size: 0.875rem; }
+        .dropdown-content a:hover { background-color: var(--preview-bg); }
+        .dropdown.show .dropdown-content { display: block; }
 
         /* Dark Mode Toggle */
         .theme-switch-wrapper { display: flex; align-items: center; gap: 0.5rem; }
@@ -111,7 +123,7 @@
         <div class="container mx-auto p-4 md:p-8">
             <header class="text-center mb-8 relative">
                 <h1 class="text-4xl font-bold text-headings">Blacklist Post Generator</h1>
-                <p class="text-lg text-secondary mt-2">Create, format, and manage social media alerts with autosave.</p>
+                <p class="text-lg text-secondary mt-2">Create, format, and manage social media alerts with autosave and AI.</p>
                 <div class="absolute top-0 right-0 theme-switch-wrapper">
                     <span class="text-sm font-medium text-secondary">☀️</span>
                     <label class="theme-switch" for="theme-toggle">
@@ -260,9 +272,36 @@
                         </div>
                         <div class="form-section-content" id="summaryContent">
                              <div class="space-y-4">
-                                <div><label for="backgroundInfo" class="block text-sm font-medium text-secondary mb-1">Background Information</label><textarea id="backgroundInfo" rows="6" class="w-full p-2 border rounded-md"></textarea></div>
-                                <div><label for="emergingReports" class="block text-sm font-medium text-secondary mb-1">Emerging Reports</label><textarea id="emergingReports" rows="3" class="w-full p-2 border rounded-md"></textarea></div>
-                                <div><label for="hashtags" class="block text-sm font-medium text-secondary mb-1">Hashtags</label><input type="text" id="hashtags" placeholder="#Hashtag1 #Hashtag2" class="w-full p-2 border rounded-md"></div>
+                                <div>
+                                    <div class="flex justify-between items-center mb-1">
+                                        <label for="backgroundInfo" class="block text-sm font-medium text-secondary">Background Information</label>
+                                        <button id="summarizeBackground" class="ai-btn action-btn text-xs bg-purple-600 hover:bg-purple-700 text-white font-bold py-1 px-2 rounded-lg shadow">
+                                            <span class="btn-text">✨ Summarize</span>
+                                            <span class="spinner">🌀</span>
+                                        </button>
+                                    </div>
+                                    <textarea id="backgroundInfo" rows="6" class="w-full p-2 border rounded-md"></textarea>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between items-center mb-1">
+                                        <label for="emergingReports" class="block text-sm font-medium text-secondary">Emerging Reports</label>
+                                        <button id="expandReports" class="ai-btn action-btn text-xs bg-purple-600 hover:bg-purple-700 text-white font-bold py-1 px-2 rounded-lg shadow">
+                                            <span class="btn-text">✨ Expand</span>
+                                            <span class="spinner">🌀</span>
+                                        </button>
+                                    </div>
+                                    <textarea id="emergingReports" rows="3" class="w-full p-2 border rounded-md"></textarea>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between items-center mb-1">
+                                        <label for="hashtags" class="block text-sm font-medium text-secondary">Hashtags</label>
+                                        <button id="suggestHashtags" class="ai-btn action-btn text-xs bg-purple-600 hover:bg-purple-700 text-white font-bold py-1 px-2 rounded-lg shadow">
+                                            <span class="btn-text">✨ Suggest</span>
+                                            <span class="spinner">🌀</span>
+                                        </button>
+                                    </div>
+                                    <input type="text" id="hashtags" placeholder="#Hashtag1 #Hashtag2" class="w-full p-2 border rounded-md">
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -284,9 +323,19 @@
                             </div>
                         </div>
                         <div id="preview" class="preview-pane p-4 rounded-md h-96 overflow-y-auto"></div>
-                        <button id="copyButton" class="copy-button mt-4 w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg text-lg shadow-md action-btn">
-                            <span id="copyButtonText">Copy to Clipboard</span>
-                        </button>
+                        <div class="flex gap-2 mt-4">
+                            <button id="copyButton" class="copy-button w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg text-lg shadow-md action-btn">
+                                <span id="copyButtonText">Copy to Clipboard</span>
+                            </button>
+                            <div class="dropdown">
+                                <button id="exportBtn" class="w-full h-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-4 rounded-lg text-lg shadow-md action-btn">Export</button>
+                                <div id="exportDropdown" class="dropdown-content">
+                                    <a href="#" id="exportTxt">as Plain Text (.txt)</a>
+                                    <a href="#" id="exportMd">as Markdown (.md)</a>
+                                    <a href="#" id="exportPdf">as PDF Document</a>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -322,6 +371,8 @@
         const editingStatus = document.getElementById('editingStatus');
         const themeToggle = document.getElementById('theme-toggle');
         const copyButtonText = document.getElementById('copyButtonText');
+        const exportBtn = document.getElementById('exportBtn');
+        const exportDropdown = document.getElementById('exportDropdown');
 
         const fields = {
             subjectName: document.getElementById('subjectName'), caseType: document.getElementById('caseType'),
@@ -350,6 +401,12 @@
             loadTemplate: document.getElementById('loadTemplate'),
             exportPostsBtn: document.getElementById('exportPostsBtn'), importPostsBtn: document.getElementById('importPostsBtn'),
             saveAsTemplateBtn: document.getElementById('saveAsTemplateBtn'),
+            summarizeBackground: document.getElementById('summarizeBackground'),
+            expandReports: document.getElementById('expandReports'),
+            suggestHashtags: document.getElementById('suggestHashtags'),
+            exportTxt: document.getElementById('exportTxt'),
+            exportMd: document.getElementById('exportMd'),
+            exportPdf: document.getElementById('exportPdf'),
         };
         
         const modals = {
@@ -398,6 +455,16 @@
         postSearchInput.addEventListener('input', openLoadModal);
         platformSelect.addEventListener('change', updatePreview);
         
+        exportBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            exportBtn.parentElement.classList.toggle('show');
+        });
+        document.addEventListener('click', (e) => {
+            if (!exportBtn.contains(e.target)) {
+                exportBtn.parentElement.classList.remove('show');
+            }
+        });
+
         // --- Modal Listeners ---
         Object.keys(closeButtons).forEach(key => {
             closeButtons[key].addEventListener('click', () => closeModal(modals[key]));
@@ -447,6 +514,12 @@
                 case 'saveAsTemplateBtn': saveCurrentAsTemplate(); break;
                 case 'exportPostsBtn': exportPosts(); break;
                 case 'importPostsBtn': importFileInput.click(); break;
+                case 'summarizeBackground': handleAIAssist('summarize', fields.backgroundInfo); break;
+                case 'expandReports': handleAIAssist('expand', fields.emergingReports); break;
+                case 'suggestHashtags': handleAIAssist('hashtags', fields.hashtags); break;
+                case 'exportTxt': exportAsTxt(); break;
+                case 'exportMd': exportAsMd(); break;
+                case 'exportPdf': exportAsPdf(); break;
             }
         }
         
@@ -529,14 +602,19 @@
 
         // --- Core Logic: Preview & Formatting ---
         function updatePreview() {
-            const post = generatePostText();
-            preview.innerHTML = renderMarkdown(post);
+            const textForCount = generatePostText(false);
+            const htmlForPreview = generatePostText(true);
+
+            preview.innerHTML = renderMarkdown(htmlForPreview);
+            
             const limit = parseInt(platformSelect.value, 10);
-            charCount.classList.toggle('char-count-limit-exceeded', limit > 0 && post.length > limit);
-            charCount.textContent = limit > 0 ? `${post.length} / ${limit}` : `${post.length}`;
+            charCount.classList.toggle('char-count-limit-exceeded', limit > 0 && textForCount.length > limit);
+            charCount.textContent = limit > 0 ? `${textForCount.length} / ${limit}` : `${textForCount.length}`;
         }
-        function generatePostText() {
+
+        function generatePostText(forPreview = false) {
             let post = '';
+            const placeholderUrl = 'https://placehold.co/64x64/f8fafc/cbd5e1?text=❌';
             if (fields.subjectName.value || fields.caseType.value) { post += `**𝐔𝐏𝐃𝐀𝐓𝐄: ${fields.subjectName.value} ${fields.caseType.value} – ${fields.location.value}**\n\n`; }
             if (fields.updateDate.value) { post += `As of **${new Date(fields.updateDate.value + 'T00:00:00').toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }).toUpperCase()}**, ...\n`; }
             if (fields.caseUpdate.value) { post += `${fields.caseUpdate.value}\n\n`; }
@@ -549,8 +627,12 @@
             
             individuals.forEach(ind => {
                 const name = ind.querySelector('.individual-name').value, dob = ind.querySelector('.individual-dob').value, phone = ind.querySelector('.individual-phone').value, email = ind.querySelector('.individual-email').value, address = ind.querySelector('.individual-address').value, imageUrl = ind.querySelector('.individual-image-url').value;
+                if (forPreview && imageUrl) {
+                    post += `<div class="my-2"><img src="${imageUrl}" class="inline-block h-16 w-16 rounded-md object-cover" onerror="this.onerror=null;this.src='${placeholderUrl}';"><br><a href="${imageUrl}" class="text-xs text-blue-500" target="_blank" rel="noopener noreferrer">${imageUrl}</a></div>`;
+                } else if (!forPreview && imageUrl) {
+                    post += `[IMAGE: ${name || 'Individual'}]\n`;
+                }
                 const fbLink = ind.querySelector('.individual-fb-link').value, igLink = ind.querySelector('.individual-ig-link').value, xLink = ind.querySelector('.individual-x-link').value, otherLinks = ind.querySelector('.individual-other-links').value.split(',').map(l => l.trim()).filter(l => l);
-                if (imageUrl) post += `[IMAGE: ${name || 'Individual'}]\n`;
                 if (name) post += `**${name}**\n`; if (dob) post += `DOB: ${dob}\n`; if (address) post += `Address: ${address}\n`; if (phone) post += `Phone: ${phone}\n`; if (email) post += `Email: ${email}\n`;
                 if (fbLink) post += `[Facebook](${fbLink})\n`; if (igLink) post += `[Instagram](${igLink})\n`; if (xLink) post += `[X (Twitter)](${xLink})\n`;
                 otherLinks.forEach(link => { let linkName = 'Link'; try { linkName = new URL(link).hostname.replace('www.', ''); } catch (e) {} post += `[${linkName}](${link})\n`; });
@@ -584,7 +666,13 @@
             if (investigations.length > 0) { post += '**Animal Cruelty Investigations**\n'; investigations.forEach(inv => { const title = inv.querySelector('.investigation-title').value, url = inv.querySelector('.investigation-url').value; if (title && url) post += `* [${title}](${url})\n`; }); post += '\n---\n\n'; }
             
             const evidenceItems = containers.evidence.querySelectorAll('.dynamic-item');
-            if (evidenceItems.length > 0) { post += '**Enhanced Documentation & Evidence**\n'; evidenceItems.forEach(item => { const title = item.querySelector('.evidence-title').value, desc = item.querySelector('.evidence-description').value, url = item.querySelector('.evidence-url').value, date = item.querySelector('.evidence-date').value, imageUrl = item.querySelector('.evidence-image-url').value; if (imageUrl) post += `[IMAGE: ${title || 'Evidence'}]\n`; if(title) { post += `* **${title}**`; if(date){ post += ` (${new Date(date + 'T00:00:00').toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })})`}; post += `\n`; } if(desc){ post += `  ${desc.replace(/\n/g, '\n  ')}\n`; } if(url){ post += `  [Source Link](${url})\n`; } post += '\n'; }); post += '---\n\n'; }
+            if (evidenceItems.length > 0) { post += '**Enhanced Documentation & Evidence**\n'; evidenceItems.forEach(item => { const title = item.querySelector('.evidence-title').value, desc = item.querySelector('.evidence-description').value, url = item.querySelector('.evidence-url').value, date = item.querySelector('.evidence-date').value, imageUrl = item.querySelector('.evidence-image-url').value; 
+                if (forPreview && imageUrl) {
+                    post += `<div class="my-2"><img src="${imageUrl}" class="inline-block h-16 w-16 rounded-md object-cover" onerror="this.onerror=null;this.src='${placeholderUrl}';"><br><a href="${imageUrl}" class="text-xs text-blue-500" target="_blank" rel="noopener noreferrer">${imageUrl}</a></div>`;
+                } else if (!forPreview && imageUrl) {
+                    post += `[IMAGE: ${title || 'Evidence'}]\n`;
+                }
+                if(title) { post += `* **${title}**`; if(date){ post += ` (${new Date(date + 'T00:00:00').toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })})`}; post += `\n`; } if(desc){ post += `  ${desc.replace(/\n/g, '\n  ')}\n`; } if(url){ post += `  [Source Link](${url})\n`; } post += '\n'; }); post += '---\n\n'; }
 
             const articles = containers.articles.querySelectorAll('.dynamic-item');
             if (articles.length > 0) { post += '**News Articles and Legal Documents**\n'; articles.forEach(art => { const title = art.querySelector('.article-title').value, url = art.querySelector('.article-url').value; if (title && url) post += `* [${title}](${url})\n`; }); post += '\n'; }
@@ -720,7 +808,7 @@
 
         // --- Utility Functions ---
         function copyToClipboard() {
-            const textToCopy = generatePostText();
+            const textToCopy = generatePostText(false);
             const textArea = document.createElement('textarea');
             textArea.value = textToCopy;
             document.body.appendChild(textArea);
@@ -766,8 +854,6 @@
                         Object.keys(itemSelectors).forEach(key => templateItem[key] = '');
                         return templateItem;
                     }
-                    // This part is for actual data, but we don't need it for template creation.
-                    // It's kept here to show the full function structure.
                     return {}; 
                 });
             }
@@ -783,7 +869,6 @@
                 data.evidence = processContainer(containers.evidence, {title:'', description:'', url:'', date:'', imageUrl:''});
                 data.articles = processContainer(containers.articles, {title:'', url:''});
             } else {
-                // Original getFormData logic
                 data.individuals = Array.from(containers.individuals.querySelectorAll('.dynamic-item')).map(item => ({ name: item.querySelector('.individual-name').value, dob: item.querySelector('.individual-dob').value, phone: item.querySelector('.individual-phone').value, email: item.querySelector('.individual-email').value, address: item.querySelector('.individual-address').value, imageUrl: item.querySelector('.individual-image-url').value, fbLink: item.querySelector('.individual-fb-link').value, igLink: item.querySelector('.individual-ig-link').value, xLink: item.querySelector('.individual-x-link').value, otherLinks: item.querySelector('.individual-other-links').value, }));
                 data.aliases = Array.from(containers.aliases.querySelectorAll('.dynamic-item')).map(item => ({ name: item.querySelector('.alias-name').value }));
                 data.organizations = Array.from(containers.organizations.querySelectorAll('.dynamic-item')).map(item => ({ name: item.querySelector('.org-name').value, ein: item.querySelector('.org-ein').value, license: item.querySelector('.org-license').value, recordLink: item.querySelector('.org-record-link').value, status: item.querySelector('.org-status').value, fbLink: item.querySelector('.org-fb-link').value, igLink: item.querySelector('.org-ig-link').value, xLink: item.querySelector('.org-x-link').value, websiteLink: item.querySelector('.org-website-link').value, otherLinks: item.querySelector('.org-other-links').value, }));
@@ -969,7 +1054,7 @@
         function saveCurrentAsTemplate() {
             const templateName = prompt("Enter a name for this template:");
             if (!templateName) return;
-            const data = getFormData(true); // Pass true to get a cleared template structure
+            const data = getFormData(true);
             data.name = templateName;
             data.id = crypto.randomUUID();
             const templates = getFromStorage(TEMPLATES_KEY);
@@ -1047,6 +1132,116 @@
             });
         }
 
+        // --- Gemini AI Functions ---
+        async function handleAIAssist(type, element) {
+            const button = buttons[type === 'summarize' ? 'summarizeBackground' : type === 'expand' ? 'expandReports' : 'suggestHashtags'];
+            let prompt = '';
+            let content = '';
+
+            button.classList.add('loading');
+            button.disabled = true;
+
+            try {
+                switch (type) {
+                    case 'summarize':
+                        content = element.value;
+                        if (!content) { showToast('Nothing to summarize.', 'error'); return; }
+                        prompt = `Summarize the following text for a social media alert post. Be concise and informative:\n\n${content}`;
+                        break;
+                    case 'expand':
+                        content = element.value;
+                        if (!content) { showToast('Nothing to expand.', 'error'); return; }
+                        prompt = `Expand on the following points, writing them out in a narrative or descriptive paragraph suitable for a social media alert post:\n\n${content}`;
+                        break;
+                    case 'hashtags':
+                        content = generatePostText();
+                        if (!content) { showToast('Please write some content before suggesting hashtags.', 'error'); return; }
+                        prompt = `Based on the following social media post content, generate a list of 5-10 relevant and effective hashtags. Return them as a single line, separated by spaces, starting with '#'.\n\nPost Content:\n${content}`;
+                        break;
+                }
+
+                const result = await callGeminiAPI(prompt);
+                element.value = result;
+                element.dispatchEvent(new Event('input', { bubbles: true }));
+                showToast('AI assistance complete!', 'success');
+
+            } catch (error) {
+                console.error('Gemini API Error:', error);
+                showToast('AI assistance failed. Please try again.', 'error');
+            } finally {
+                button.classList.remove('loading');
+                button.disabled = false;
+            }
+        }
+
+        async function callGeminiAPI(prompt) {
+            const apiKey = ""; 
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+            
+            const payload = {
+                contents: [{ role: "user", parts: [{ text: prompt }] }]
+            };
+
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                const errorBody = await response.json();
+                throw new Error(`API request failed with status ${response.status}: ${errorBody.error.message}`);
+            }
+
+            const result = await response.json();
+
+            if (result.candidates && result.candidates.length > 0 &&
+                result.candidates[0].content && result.candidates[0].content.parts &&
+                result.candidates[0].content.parts.length > 0) {
+                return result.candidates[0].content.parts[0].text.trim();
+            } else {
+                throw new Error('Invalid response structure from API.');
+            }
+        }
+
+        // --- Export Functions ---
+        function downloadFile(filename, content, mimeType) {
+            const blob = new Blob([content], { type: mimeType });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function exportAsTxt() {
+            const text = generatePostText(false).replace(/\[(.*?)\]\((.*?)\)/g, '$1: $2'); // Convert links to plain text
+            downloadFile(`${currentPostName || 'post'}.txt`, text, 'text/plain;charset=utf-8;');
+        }
+
+        function exportAsMd() {
+            const text = generatePostText(false);
+            downloadFile(`${currentPostName || 'post'}.md`, text, 'text/markdown;charset=utf-8;');
+        }
+
+        function exportAsPdf() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            const source = document.getElementById('preview');
+            doc.html(source, {
+                callback: function (doc) {
+                    doc.save(`${currentPostName || 'post'}.pdf`);
+                },
+                x: 10,
+                y: 10,
+                width: 180,
+                windowWidth: 800
+            });
+        }
+
         // --- Toast & Modal Helpers ---
         function showToast(message, type = 'success') { const toastContainer = document.getElementById('toast-container'); const toast = document.createElement('div'); toast.className = `toast ${type}`; toast.textContent = message; toastContainer.appendChild(toast); setTimeout(() => { toast.classList.add('show'); }, 10); setTimeout(() => { toast.classList.remove('show'); toast.addEventListener('transitionend', () => toast.remove()); }, 4000); }
         
@@ -1099,14 +1294,12 @@
                 document.documentElement.classList.remove('dark');
             }
 
-            // Populate default templates if none exist
             if (getFromStorage(TEMPLATES_KEY).length === 0) {
                 const defaultTemplates = [
                     { id: 'template-animal-cruelty', name: 'Animal Cruelty Case', individuals: [{}], investigations: [{}], articles: [{}] },
                     { id: 'template-scam-alert', name: 'Scam/Fraud Alert', individuals: [{}], aliases: [{}], organizations: [{}], fraudulentSolicitations: [{}] },
                     { id: 'template-community-warning', name: 'General Community Warning', individuals: [{}], warningsAndAccounts: [{}] }
                 ];
-                // Use a simplified version of getFormData to build template structure
                 const fullTemplates = defaultTemplates.map(t => {
                     const base = getFormData(true);
                     base.id = t.id;
