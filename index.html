@@ -278,6 +278,18 @@
                         </div>
                     </div>
 
+                    <!-- NEW SECTION: Enhanced Documentation & Evidence -->
+                    <div class="form-section shadow-md">
+                         <div class="form-section-header" role="button" aria-expanded="true" aria-controls="evidenceContent" tabindex="0">
+                            <h3><span aria-hidden="true" class="text-xl mr-2">📂</span>Enhanced Documentation & Evidence</h3>
+                            <svg class="chevron-icon w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                        <div class="form-section-content" id="evidenceContent">
+                            <div id="evidenceContainer" class="space-y-4"></div>
+                            <button id="addEvidence" class="mt-4 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg w-full">Add Evidence</button>
+                        </div>
+                    </div>
+
                     <div class="form-section shadow-md">
                          <div class="form-section-header" role="button" aria-expanded="true" aria-controls="articlesContent" tabindex="0">
                             <h3><span aria-hidden="true" class="text-xl mr-2">📰</span>News & Legal Documents</h3>
@@ -378,6 +390,7 @@
             fraudulentSolicitations: document.getElementById('fraudulentSolicitationsContainer'),
             warningsAndAccounts: document.getElementById('warningsAndAccountsContainer'),
             investigations: document.getElementById('investigationsContainer'),
+            evidence: document.getElementById('evidenceContainer'),
             articles: document.getElementById('articlesContainer'),
         };
 
@@ -389,6 +402,7 @@
             addFraudulentSolicitation: document.getElementById('addFraudulentSolicitation'),
             addWarningAndAccount: document.getElementById('addWarningAndAccount'),
             addInvestigation: document.getElementById('addInvestigation'),
+            addEvidence: document.getElementById('addEvidence'),
             addArticle: document.getElementById('addArticle'),
             newPost: document.getElementById('newPost'),
             copy: document.getElementById('copyButton'),
@@ -436,6 +450,7 @@
                 case 'addFraudulentSolicitation': addDynamicItem('fraudulentSolicitation'); break;
                 case 'addWarningAndAccount': addDynamicItem('warningAndAccount'); break;
                 case 'addInvestigation': addDynamicItem('investigation'); break;
+                case 'addEvidence': addDynamicItem('evidence'); break;
                 case 'addArticle': addDynamicItem('article'); break;
                 case 'newPost': clearForm(); break;
                 case 'copyButton': copyToClipboard(); break;
@@ -468,6 +483,19 @@
         }
 
         // --- Dynamic Item Management ---
+        // DEBUG FIX: Create a clear mapping from item type to its container's key to prevent errors.
+        const typeToContainerKey = {
+            individual: 'individuals',
+            alias: 'aliases',
+            organization: 'organizations',
+            legalRegistration: 'legalRegistrations',
+            fraudulentSolicitation: 'fraudulentSolicitations',
+            warningAndAccount: 'warningsAndAccounts',
+            investigation: 'investigations',
+            evidence: 'evidence', // This mapping fixes the bug
+            article: 'articles'
+        };
+
         const itemTemplates = {
             individual: (id) => `<div><label for="individual-name-${id}" class="block text-sm font-medium text-gray-700 mb-1">Full Name</label><input type="text" id="individual-name-${id}" class="w-full p-2 border rounded-md mb-2 individual-name"></div><div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-2"><div><label for="individual-dob-${id}" class="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label><input type="text" id="individual-dob-${id}" class="w-full p-2 border rounded-md individual-dob"></div><div><label for="individual-phone-${id}" class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label><input type="text" id="individual-phone-${id}" class="w-full p-2 border rounded-md individual-phone"></div></div><div><label for="individual-email-${id}" class="block text-sm font-medium text-gray-700 mb-1">Email Address</label><input type="text" id="individual-email-${id}" class="w-full p-2 border rounded-md mb-2 individual-email"></div><div><label for="individual-address-${id}" class="block text-sm font-medium text-gray-700 mb-1">Last Known Address</label><textarea id="individual-address-${id}" rows="2" class="w-full p-2 border rounded-md mb-2 individual-address"></textarea></div><h4 class="font-semibold text-sm mt-3 mb-1 text-gray-600">Social Media Links</h4><div class="space-y-2"><input type="text" placeholder="Facebook URL" class="w-full p-2 border rounded-md individual-fb-link" aria-label="Individual Facebook URL"><input type="text" placeholder="Instagram URL" class="w-full p-2 border rounded-md individual-ig-link" aria-label="Individual Instagram URL"><input type="text" placeholder="X (Twitter) URL" class="w-full p-2 border rounded-md individual-x-link" aria-label="Individual X (Twitter) URL"><input type="text" placeholder="Other URLs (comma-sep)" class="w-full p-2 border rounded-md individual-other-links" aria-label="Individual Other URLs"></div>`,
             alias: (id) => `<div><label for="alias-name-${id}" class="block text-sm font-medium text-gray-700 mb-1">Alias Name</label><input type="text" id="alias-name-${id}" class="w-full p-2 border rounded-md alias-name"></div>`,
@@ -476,14 +504,23 @@
             fraudulentSolicitation: (id) => `<div><label for="fraud-text-${id}" class="block text-sm font-medium text-gray-700 mb-1">Allegation Details</label><textarea id="fraud-text-${id}" rows="3" class="w-full p-2 border rounded-md fraudulent-solicitation-text"></textarea></div>`,
             warningAndAccount: (id) => `<div><label for="warning-text-${id}" class="block text-sm font-medium text-gray-700 mb-1">Account/Warning Details</label><textarea id="warning-text-${id}" rows="3" class="w-full p-2 border rounded-md warning-account-text"></textarea></div>`,
             investigation: (id) => `<div><label for="inv-title-${id}" class="block text-sm font-medium text-gray-700 mb-1">Title</label><input type="text" id="inv-title-${id}" class="w-full p-2 border rounded-md mb-2 investigation-title"></div><div><label for="inv-url-${id}" class="block text-sm font-medium text-gray-700 mb-1">URL</label><input type="text" id="inv-url-${id}" class="w-full p-2 border rounded-md mb-2 investigation-url"></div>`,
+            evidence: (id) => `<div><label for="evidence-title-${id}" class="block text-sm font-medium text-gray-700 mb-1">Title</label><input type="text" id="evidence-title-${id}" class="w-full p-2 border rounded-md mb-2 evidence-title"></div><div><label for="evidence-desc-${id}" class="block text-sm font-medium text-gray-700 mb-1">Description</label><textarea id="evidence-desc-${id}" rows="3" class="w-full p-2 border rounded-md mb-2 evidence-description"></textarea></div><div class="grid grid-cols-1 md:grid-cols-2 gap-2"><div><label for="evidence-url-${id}" class="block text-sm font-medium text-gray-700 mb-1">URL</label><input type="text" id="evidence-url-${id}" class="w-full p-2 border rounded-md evidence-url"></div><div><label for="evidence-date-${id}" class="block text-sm font-medium text-gray-700 mb-1">Date (Optional)</label><input type="date" id="evidence-date-${id}" class="w-full p-2 border rounded-md evidence-date"></div></div>`,
             article: (id) => `<div><label for="art-title-${id}" class="block text-sm font-medium text-gray-700 mb-1">Title</label><input type="text" id="art-title-${id}" class="w-full p-2 border rounded-md mb-2 article-title"></div><div><label for="art-url-${id}" class="block text-sm font-medium text-gray-700 mb-1">URL</label><input type="text" id="art-url-${id}" class="w-full p-2 border rounded-md mb-2 article-url"></div>`
         };
 
         function addDynamicItem(type) {
-            const containerKey = {
-                'alias': 'aliases', 'legalRegistration': 'legalRegistrations', 'fraudulentSolicitation': 'fraudulentSolicitations', 'warningAndAccount': 'warningsAndAccounts'
-            }[type] || `${type}s`;
+            // DEBUG FIX: Use the explicit map to find the correct container key.
+            const containerKey = typeToContainerKey[type];
+            if (!containerKey) {
+                console.error(`No container key found for type: ${type}`);
+                return;
+            }
             const container = containers[containerKey];
+            if (!container) {
+                console.error(`Container not found for key: ${containerKey}`);
+                return;
+            }
+            
             const uniqueId = `${type}-${Date.now()}`;
             const div = document.createElement('div');
             div.className = 'dynamic-item';
@@ -541,6 +578,9 @@
             const investigations = containers.investigations.querySelectorAll('.dynamic-item');
             if (investigations.length > 0) { post += '**Animal Cruelty Investigations**\n'; investigations.forEach(inv => { const title = inv.querySelector('.investigation-title').value, url = inv.querySelector('.investigation-url').value; if (title && url) post += `* [${title}](${url})\n`; }); post += '\n---\n\n'; }
             
+            const evidenceItems = containers.evidence.querySelectorAll('.dynamic-item');
+            if (evidenceItems.length > 0) { post += '**Enhanced Documentation & Evidence**\n'; evidenceItems.forEach(item => { const title = item.querySelector('.evidence-title').value, desc = item.querySelector('.evidence-description').value, url = item.querySelector('.evidence-url').value, date = item.querySelector('.evidence-date').value; if(title) { post += `* **${title}**`; if(date){ post += ` (${new Date(date + 'T00:00:00').toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })})`}; post += `\n`; } if(desc){ post += `  ${desc.replace(/\n/g, '\n  ')}\n`; } if(url){ post += `  [Source Link](${url})\n`; } post += '\n'; }); post += '---\n\n'; }
+
             const articles = containers.articles.querySelectorAll('.dynamic-item');
             if (articles.length > 0) { post += '**News Articles and Legal Documents**\n'; articles.forEach(art => { const title = art.querySelector('.article-title').value, url = art.querySelector('.article-url').value; if (title && url) post += `* [${title}](${url})\n`; }); post += '\n'; }
 
@@ -592,6 +632,7 @@
             data.fraudulentSolicitations = Array.from(containers.fraudulentSolicitations.querySelectorAll('.dynamic-item')).map(item => ({ text: item.querySelector('.fraudulent-solicitation-text').value }));
             data.warningsAndAccounts = Array.from(containers.warningsAndAccounts.querySelectorAll('.dynamic-item')).map(item => ({ text: item.querySelector('.warning-account-text').value }));
             data.investigations = Array.from(containers.investigations.querySelectorAll('.dynamic-item')).map(item => ({ title: item.querySelector('.investigation-title').value, url: item.querySelector('.investigation-url').value }));
+            data.evidence = Array.from(containers.evidence.querySelectorAll('.dynamic-item')).map(item => ({ title: item.querySelector('.evidence-title').value, description: item.querySelector('.evidence-description').value, url: item.querySelector('.evidence-url').value, date: item.querySelector('.evidence-date').value }));
             data.articles = Array.from(containers.articles.querySelectorAll('.dynamic-item')).map(item => ({ title: item.querySelector('.article-title').value, url: item.querySelector('.article-url').value }));
             return data;
         }
@@ -605,6 +646,7 @@
             data.fraudulentSolicitations?.forEach(sol => { addDynamicItem('fraudulentSolicitation'); containers.fraudulentSolicitations.lastElementChild.querySelector('.fraudulent-solicitation-text').value = sol.text; });
             data.warningsAndAccounts?.forEach(warn => { addDynamicItem('warningAndAccount'); containers.warningsAndAccounts.lastElementChild.querySelector('.warning-account-text').value = warn.text; });
             data.investigations?.forEach(inv => { addDynamicItem('investigation'); const item = containers.investigations.lastElementChild; item.querySelector('.investigation-title').value = inv.title; item.querySelector('.investigation-url').value = inv.url; });
+            data.evidence?.forEach(ev => { addDynamicItem('evidence'); const item = containers.evidence.lastElementChild; item.querySelector('.evidence-title').value = ev.title || ''; item.querySelector('.evidence-description').value = ev.description || ''; item.querySelector('.evidence-url').value = ev.url || ''; item.querySelector('.evidence-date').value = ev.date || ''; });
             data.articles?.forEach(art => { addDynamicItem('article'); const item = containers.articles.lastElementChild; item.querySelector('.article-title').value = art.title; item.querySelector('.article-url').value = art.url; });
             currentPostName = data.name;
             updateUIForState();
@@ -616,6 +658,20 @@
         function showConfirmation(message, onConfirm) { document.getElementById('confirmModalText').textContent = message; openModal(confirmModal); document.getElementById('confirmOkBtn').onclick = () => { closeModal(confirmModal); onConfirm(); }; }
         function openModal(modalElement) { modalElement.style.display = 'flex'; appContainer.setAttribute('aria-hidden', 'true'); const focusableElements = modalElement.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'); if (focusableElements.length) focusableElements[0].focus(); }
         function closeModal(modalElement) { modalElement.style.display = 'none'; appContainer.removeAttribute('aria-hidden'); }
+        
+        function updateUIForState() {
+            if (currentPostId) {
+                editingStatus.textContent = `Editing: ${currentPostName}`;
+                buttons.saveOrUpdate.textContent = 'Update Current';
+                buttons.saveOrUpdate.classList.remove('bg-indigo-600', 'hover:bg-indigo-700');
+                buttons.saveOrUpdate.classList.add('bg-purple-600', 'hover:bg-purple-700');
+            } else {
+                editingStatus.textContent = 'Editing: New Post';
+                buttons.saveOrUpdate.textContent = 'Save New';
+                buttons.saveOrUpdate.classList.remove('bg-purple-600', 'hover:bg-purple-700');
+                buttons.saveOrUpdate.classList.add('bg-indigo-600', 'hover:bg-indigo-700');
+            }
+        }
 
         // --- Initial Load ---
         clearForm();
