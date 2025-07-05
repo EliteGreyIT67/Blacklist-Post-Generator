@@ -6,6 +6,7 @@
     <title>Blacklist Post Generator </title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -602,10 +603,19 @@
 
         // --- Core Logic: Preview & Formatting ---
         function updatePreview() {
-            const textForCount = generatePostText(false);
-            const htmlForPreview = generatePostText(true);
+            const postSegments = generatePostText(true);
+            let finalHtml = '';
+            let textForCount = '';
 
-            preview.innerHTML = renderMarkdown(htmlForPreview);
+            postSegments.forEach(segment => {
+                if (segment.type === 'html') {
+                    finalHtml += segment.content;
+                } else { // markdown
+                    finalHtml += renderMarkdown(segment.content);
+                    textForCount += segment.content;
+                }
+            });
+            preview.innerHTML = finalHtml;
             
             const limit = parseInt(platformSelect.value, 10);
             charCount.classList.toggle('char-count-limit-exceeded', limit > 0 && textForCount.length > limit);
@@ -613,80 +623,103 @@
         }
 
         function generatePostText(forPreview = false) {
-            let post = '';
+            let segments = [];
+            let currentMarkdown = '';
             const placeholderUrl = 'https://placehold.co/64x64/f8fafc/cbd5e1?text=❌';
-            if (fields.subjectName.value || fields.caseType.value) { post += `**𝐔𝐏𝐃𝐀𝐓𝐄: ${fields.subjectName.value} ${fields.caseType.value} – ${fields.location.value}**\n\n`; }
-            if (fields.updateDate.value) { post += `As of **${new Date(fields.updateDate.value + 'T00:00:00').toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }).toUpperCase()}**, ...\n`; }
-            if (fields.caseUpdate.value) { post += `${fields.caseUpdate.value}\n\n`; }
-            if (fields.trialDate.value) { post += `**Her 𝐉𝐮𝐫𝐲 𝐭𝐫𝐢𝐚𝐥 𝐢𝐬 𝐬𝐞𝐭 𝐟𝐨𝐫 ${fields.trialDate.value}.**\n\n`; }
+
+            const flushMarkdown = () => {
+                if (currentMarkdown) {
+                    segments.push({ type: 'markdown', content: currentMarkdown });
+                    currentMarkdown = '';
+                }
+            };
+
+            if (fields.subjectName.value || fields.caseType.value) { currentMarkdown += `**𝐔𝐏𝐃𝐀𝐓𝐄: ${fields.subjectName.value} ${fields.caseType.value} – ${fields.location.value}**\n\n`; }
+            if (fields.updateDate.value) { currentMarkdown += `As of **${new Date(fields.updateDate.value + 'T00:00:00').toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }).toUpperCase()}**, ...\n`; }
+            if (fields.caseUpdate.value) { currentMarkdown += `${fields.caseUpdate.value}\n\n`; }
+            if (fields.trialDate.value) { currentMarkdown += `**Her 𝐉𝐮𝐫𝐲 𝐭𝐫𝐢𝐚𝐥 𝐢𝐬 𝐬𝐞𝐭 𝐟𝐨𝐫 ${fields.trialDate.value}.**\n\n`; }
 
             const individuals = containers.individuals.querySelectorAll('.dynamic-item');
             const aliases = Array.from(containers.aliases.querySelectorAll('.alias-name')).map(input => input.value.trim()).filter(Boolean);
             const organizations = containers.organizations.querySelectorAll('.dynamic-item');
-            if (individuals.length > 0 || organizations.length > 0) { post += '▀▄▀▄ **𝑩𝑳𝑨𝑪𝑲𝑳𝑰𝑺𝑻𝑬𝑫** ▄▀▄▀\n\n'; }
+            if (individuals.length > 0 || organizations.length > 0) { currentMarkdown += '▀▄▀▄ **𝑩𝑳𝑨𝑪𝑲𝑳𝑰𝑺𝑻𝑬𝑫** ▄▀▄▀\n\n'; }
             
             individuals.forEach(ind => {
                 const name = ind.querySelector('.individual-name').value, dob = ind.querySelector('.individual-dob').value, phone = ind.querySelector('.individual-phone').value, email = ind.querySelector('.individual-email').value, address = ind.querySelector('.individual-address').value, imageUrl = ind.querySelector('.individual-image-url').value;
                 if (forPreview && imageUrl) {
-                    post += `<div class="my-2"><img src="${imageUrl}" class="inline-block h-16 w-16 rounded-md object-cover" onerror="this.onerror=null;this.src='${placeholderUrl}';"><br><a href="${imageUrl}" class="text-xs text-blue-500" target="_blank" rel="noopener noreferrer">${imageUrl}</a></div>`;
+                    flushMarkdown();
+                    segments.push({ type: 'html', content: `<div class="my-2"><img src="${imageUrl}" class="inline-block h-16 w-16 rounded-md object-cover" onerror="this.onerror=null;this.src='${placeholderUrl}';"><br><a href="${imageUrl}" class="text-xs text-blue-500" target="_blank" rel="noopener noreferrer">${imageUrl}</a></div>` });
                 } else if (!forPreview && imageUrl) {
-                    post += `[IMAGE: ${name || 'Individual'}]\n`;
+                    currentMarkdown += `[IMAGE: ${name || 'Individual'}]\n`;
                 }
                 const fbLink = ind.querySelector('.individual-fb-link').value, igLink = ind.querySelector('.individual-ig-link').value, xLink = ind.querySelector('.individual-x-link').value, otherLinks = ind.querySelector('.individual-other-links').value.split(',').map(l => l.trim()).filter(l => l);
-                if (name) post += `**${name}**\n`; if (dob) post += `DOB: ${dob}\n`; if (address) post += `Address: ${address}\n`; if (phone) post += `Phone: ${phone}\n`; if (email) post += `Email: ${email}\n`;
-                if (fbLink) post += `[Facebook](${fbLink})\n`; if (igLink) post += `[Instagram](${igLink})\n`; if (xLink) post += `[X (Twitter)](${xLink})\n`;
-                otherLinks.forEach(link => { let linkName = 'Link'; try { linkName = new URL(link).hostname.replace('www.', ''); } catch (e) {} post += `[${linkName}](${link})\n`; });
-                post += '\n---\n\n';
+                if (name) currentMarkdown += `**${name}**\n`; if (dob) currentMarkdown += `DOB: ${dob}\n`; if (address) currentMarkdown += `Address: ${address}\n`; if (phone) currentMarkdown += `Phone: ${phone}\n`; if (email) currentMarkdown += `Email: ${email}\n`;
+                if (fbLink) currentMarkdown += `[Facebook](${fbLink})\n`; if (igLink) currentMarkdown += `[Instagram](${igLink})\n`; if (xLink) currentMarkdown += `[X (Twitter)](${xLink})\n`;
+                otherLinks.forEach(link => { let linkName = 'Link'; try { linkName = new URL(link).hostname.replace('www.', ''); } catch (e) {} currentMarkdown += `[${linkName}](${link})\n`; });
+                currentMarkdown += '\n---\n\n';
             });
             
-            if (aliases.length > 0) { post += `**She goes by the names of ${aliases.join(', ')} and uses other fake accounts and names.**\n\n---\n\n`; }
+            if (aliases.length > 0) { currentMarkdown += `**She goes by the names of ${aliases.join(', ')} and uses other fake accounts and names.**\n\n---\n\n`; }
             
             organizations.forEach(org => {
                 const name = org.querySelector('.org-name').value; if (!name) return;
-                post += `**${name}**\n`;
+                currentMarkdown += `**${name}**\n`;
                 const ein = org.querySelector('.org-ein').value, license = org.querySelector('.org-license').value, recordLink = org.querySelector('.org-record-link').value, status = org.querySelector('.org-status').value;
                 const fbLink = org.querySelector('.org-fb-link').value, igLink = org.querySelector('.org-ig-link').value, xLink = org.querySelector('.org-x-link').value, websiteLink = org.querySelector('.org-website-link').value;
                 const otherLinks = org.querySelector('.org-other-links').value.split(',').map(l => l.trim()).filter(l => l);
-                if (ein) post += `EIN: ${ein}\n`; if (license) post += `License: ${license}\n`; if (recordLink) post += `[Official Record](${recordLink})\n`; if (status) post += `Status: **${status}**\n`;
-                if (fbLink) post += `[FB](${fbLink})\n`; if (igLink) post += `[IG](${igLink})\n`; if (xLink) post += `[X (Twitter)](${xLink})\n`; if (websiteLink) post += `[Website](${websiteLink})\n`;
-                otherLinks.forEach(link => { let linkName = 'Link'; try { linkName = new URL(link).hostname.replace('www.', ''); } catch (e) {} post += `[${linkName}](${link})\n`; });
-                post += '\n---\n\n';
+                if (ein) currentMarkdown += `EIN: ${ein}\n`; if (license) currentMarkdown += `License: ${license}\n`; if (recordLink) currentMarkdown += `[Official Record](${recordLink})\n`; if (status) currentMarkdown += `Status: **${status}**\n`;
+                if (fbLink) currentMarkdown += `[FB](${fbLink})\n`; if (igLink) currentMarkdown += `[IG](${igLink})\n`; if (xLink) currentMarkdown += `[X (Twitter)](${xLink})\n`; if (websiteLink) currentMarkdown += `[Website](${websiteLink})\n`;
+                otherLinks.forEach(link => { let linkName = 'Link'; try { linkName = new URL(link).hostname.replace('www.', ''); } catch (e) {} currentMarkdown += `[${linkName}](${link})\n`; });
+                currentMarkdown += '\n---\n\n';
             });
 
             const legalRegs = containers.legalRegistrations.querySelectorAll('.dynamic-item');
-            if (legalRegs.length > 0) { post += '**Legal Registration**\n'; legalRegs.forEach(item => { const title = item.querySelector('.legal-registration-title').value, url = item.querySelector('.legal-registration-url').value; if (title && url) post += `* [${title}](${url})\n`; }); post += '\n---\n\n'; }
+            if (legalRegs.length > 0) { currentMarkdown += '**Legal Registration**\n'; legalRegs.forEach(item => { const title = item.querySelector('.legal-registration-title').value, url = item.querySelector('.legal-registration-url').value; if (title && url) currentMarkdown += `* [${title}](${url})\n`; }); currentMarkdown += '\n---\n\n'; }
             
             const fraudAllegations = Array.from(containers.fraudulentSolicitations.querySelectorAll('.fraudulent-solicitation-text')).map(input => input.value.trim()).filter(Boolean);
-            if (fraudAllegations.length > 0) { post += '**Allegations of Fraudulent Solicitations**\n'; fraudAllegations.forEach(text => { post += `* ${text}\n`; }); post += '\n---\n\n'; }
+            if (fraudAllegations.length > 0) { currentMarkdown += '**Allegations of Fraudulent Solicitations**\n'; fraudAllegations.forEach(text => { currentMarkdown += `* ${text}\n`; }); currentMarkdown += '\n---\n\n'; }
 
             const warnings = Array.from(containers.warningsAndAccounts.querySelectorAll('.warning-account-text')).map(input => input.value.trim()).filter(Boolean);
-            if (warnings.length > 0) { post += '**Warnings and First-Hand Accounts**\n'; warnings.forEach(text => { post += `* ${text}\n`; }); post += '\n---\n\n'; }
+            if (warnings.length > 0) { currentMarkdown += '**Warnings and First-Hand Accounts**\n'; warnings.forEach(text => { currentMarkdown += `* ${text}\n`; }); currentMarkdown += '\n---\n\n'; }
 
             const investigations = containers.investigations.querySelectorAll('.dynamic-item');
-            if (investigations.length > 0) { post += '**Animal Cruelty Investigations**\n'; investigations.forEach(inv => { const title = inv.querySelector('.investigation-title').value, url = inv.querySelector('.investigation-url').value; if (title && url) post += `* [${title}](${url})\n`; }); post += '\n---\n\n'; }
+            if (investigations.length > 0) { currentMarkdown += '**Animal Cruelty Investigations**\n'; investigations.forEach(inv => { const title = inv.querySelector('.investigation-title').value, url = inv.querySelector('.investigation-url').value; if (title && url) currentMarkdown += `* [${title}](${url})\n`; }); currentMarkdown += '\n---\n\n'; }
             
             const evidenceItems = containers.evidence.querySelectorAll('.dynamic-item');
-            if (evidenceItems.length > 0) { post += '**Enhanced Documentation & Evidence**\n'; evidenceItems.forEach(item => { const title = item.querySelector('.evidence-title').value, desc = item.querySelector('.evidence-description').value, url = item.querySelector('.evidence-url').value, date = item.querySelector('.evidence-date').value, imageUrl = item.querySelector('.evidence-image-url').value; 
+            if (evidenceItems.length > 0) { currentMarkdown += '**Enhanced Documentation & Evidence**\n'; evidenceItems.forEach(item => { const title = item.querySelector('.evidence-title').value, desc = item.querySelector('.evidence-description').value, url = item.querySelector('.evidence-url').value, date = item.querySelector('.evidence-date').value, imageUrl = item.querySelector('.evidence-image-url').value; 
                 if (forPreview && imageUrl) {
-                    post += `<div class="my-2"><img src="${imageUrl}" class="inline-block h-16 w-16 rounded-md object-cover" onerror="this.onerror=null;this.src='${placeholderUrl}';"><br><a href="${imageUrl}" class="text-xs text-blue-500" target="_blank" rel="noopener noreferrer">${imageUrl}</a></div>`;
+                    flushMarkdown();
+                    segments.push({ type: 'html', content: `<div class="my-2"><img src="${imageUrl}" class="inline-block h-16 w-16 rounded-md object-cover" onerror="this.onerror=null;this.src='${placeholderUrl}';"><br><a href="${imageUrl}" class="text-xs text-blue-500" target="_blank" rel="noopener noreferrer">${imageUrl}</a></div>` });
                 } else if (!forPreview && imageUrl) {
-                    post += `[IMAGE: ${title || 'Evidence'}]\n`;
+                    currentMarkdown += `[IMAGE: ${title || 'Evidence'}]\n`;
                 }
-                if(title) { post += `* **${title}**`; if(date){ post += ` (${new Date(date + 'T00:00:00').toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })})`}; post += `\n`; } if(desc){ post += `  ${desc.replace(/\n/g, '\n  ')}\n`; } if(url){ post += `  [Source Link](${url})\n`; } post += '\n'; }); post += '---\n\n'; }
+                if(title) { currentMarkdown += `* **${title}**`; if(date){ currentMarkdown += ` (${new Date(date + 'T00:00:00').toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })})`}; currentMarkdown += `\n`; } if(desc){ currentMarkdown += `  ${desc.replace(/\n/g, '\n  ')}\n`; } if(url){ currentMarkdown += `  [Source Link](${url})\n`; } currentMarkdown += '\n'; }); currentMarkdown += '---\n\n'; }
 
             const articles = containers.articles.querySelectorAll('.dynamic-item');
-            if (articles.length > 0) { post += '**News Articles and Legal Documents**\n'; articles.forEach(art => { const title = art.querySelector('.article-title').value, url = art.querySelector('.article-url').value; if (title && url) post += `* [${title}](${url})\n`; }); post += '\n'; }
+            if (articles.length > 0) { currentMarkdown += '**News Articles and Legal Documents**\n'; articles.forEach(art => { const title = art.querySelector('.article-title').value, url = art.querySelector('.article-url').value; if (title && url) currentMarkdown += `* [${title}](${url})\n`; }); currentMarkdown += '\n'; }
 
-            if (fields.backgroundInfo.value) { post += `${fields.backgroundInfo.value}\n\n`; }
-            if (fields.emergingReports.value) { post += `**MORE REPORTS EMERGING. ALLEGEDLY, ${fields.emergingReports.value.toUpperCase()}**\n\n`; }
+            if (fields.backgroundInfo.value) { currentMarkdown += `${fields.backgroundInfo.value}\n\n`; }
+            if (fields.emergingReports.value) { currentMarkdown += `**MORE REPORTS EMERGING. ALLEGEDLY, ${fields.emergingReports.value.toUpperCase()}**\n\n`; }
             
-            post += '### Disclaimer:\n***The information shared in this post is based on publicly available information...***\n\n';
-            if (fields.hashtags.value) { post += `${fields.hashtags.value}\n`; }
+            currentMarkdown += '### Disclaimer:\n***The information shared in this post is based on publicly available information...***\n\n';
+            if (fields.hashtags.value) { currentMarkdown += `${fields.hashtags.value}\n`; }
             
-            return post;
+            flushMarkdown();
+            return forPreview ? segments : segments.map(s => s.content).join('');
         }
 
-        function renderMarkdown(text) { return text.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\*\*\*(.*?)\*\*\*/g, '<strong><em>$1</em></strong>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\*(.*?)\*/g, '<em>$1</em>').replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>').replace(/^### (.*$)/gim, '<h3>$1</h3>').replace(/^## (.*$)/gim, '<h2>$1</h2>').replace(/^# (.*$)/gim, '<h1>$1</h1>').replace(/^\* (.*$)/gim, '<li>$1</li>').replace(/\n/g, '<br>'); }
+        function renderMarkdown(text) {
+            return text
+                .replace(/\*\*\*(.*?)\*\*\*/g, '<strong><em>$1</em></strong>')
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>')
+                .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+                .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+                .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+                .replace(/^\* (.*$)/gim, '<li>$1</li>')
+                .replace(/\n/g, '<br>');
+        }
         
         // --- Local Storage & Data Functions ---
         function getFromStorage(key) { try { return JSON.parse(localStorage.getItem(key)) || []; } catch (e) { return []; } }
@@ -1218,7 +1251,7 @@
         }
 
         function exportAsTxt() {
-            const text = generatePostText(false).replace(/\[(.*?)\]\((.*?)\)/g, '$1: $2'); // Convert links to plain text
+            const text = generatePostText(false).replace(/\[(.*?)\]\((.*?)\)/g, '$1: $2');
             downloadFile(`${currentPostName || 'post'}.txt`, text, 'text/plain;charset=utf-8;');
         }
 
@@ -1228,17 +1261,24 @@
         }
 
         function exportAsPdf() {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
             const source = document.getElementById('preview');
-            doc.html(source, {
-                callback: function (doc) {
-                    doc.save(`${currentPostName || 'post'}.pdf`);
-                },
-                x: 10,
-                y: 10,
-                width: 180,
-                windowWidth: 800
+            const { jsPDF } = window.jspdf;
+            
+            html2canvas(source, {
+                useCORS: true, // For external images
+                backgroundColor: document.documentElement.classList.contains('dark') ? '#1f2937' : '#f3f4f6',
+            }).then(canvas => {
+                const imgData = canvas.toDataURL('image/png');
+                const pdf = new jsPDF({
+                    orientation: 'p',
+                    unit: 'px',
+                    format: [canvas.width, canvas.height]
+                });
+                pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+                pdf.save(`${currentPostName || 'post'}.pdf`);
+            }).catch(err => {
+                console.error("PDF export failed:", err);
+                showToast("PDF export failed. See console for details.", "error");
             });
         }
 
