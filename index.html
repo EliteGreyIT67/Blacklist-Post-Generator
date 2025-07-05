@@ -822,9 +822,16 @@
                 showConfirmation(
                     "We found an unsaved draft. Would you like to restore it?",
                     () => { // onConfirm
-                        const data = JSON.parse(draft);
-                        populateForm(data);
-                        showToast("Draft restored.", 'info');
+                        try {
+                            const data = JSON.parse(draft);
+                            populateForm(data);
+                            showToast("Draft restored.", 'info');
+                        } catch (e) {
+                            console.error("Failed to parse autosaved draft:", e);
+                            showToast("Could not restore draft, it was corrupted.", 'error');
+                            clearAutosave();
+                            clearForm();
+                        }
                     },
                     () => { // onCancel
                         clearForm();
