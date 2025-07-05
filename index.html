@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,183 +7,146 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --bg-main: #f9fafb; /* gray-50 */
+            --bg-secondary: #ffffff;
+            --text-primary: #1f2937; /* gray-800 */
+            --text-secondary: #4b5563; /* gray-600 */
+            --text-headings: #111827; /* gray-900 */
+            --border-color: #e5e7eb; /* gray-200 */
+            --border-dashed: #cbd5e1; /* gray-300 */
+            --dynamic-item-bg: #f8fafc;
+            --preview-bg: #f3f4f6; /* gray-100 */
+            --modal-bg: #fefefe;
+            --input-bg: #ffffff;
+        }
+
+        html.dark {
+            --bg-main: #111827; /* gray-900 */
+            --bg-secondary: #1f2937; /* gray-800 */
+            --text-primary: #d1d5db; /* gray-300 */
+            --text-secondary: #9ca3af; /* gray-400 */
+            --text-headings: #f9fafb; /* gray-50 */
+            --border-color: #374151; /* gray-700 */
+            --border-dashed: #4b5563; /* gray-600 */
+            --dynamic-item-bg: #374151; /* gray-700 */
+            --preview-bg: #1f2937; /* gray-800 */
+            --modal-bg: #1f2937;
+            --input-bg: #374151; /* gray-700 */
+        }
+
         body {
             font-family: 'Inter', sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-primary);
         }
+
         .form-section {
-            border: 1px solid #e2e8f0;
-            border-radius: 0.5rem;
-            margin-bottom: 1.5rem;
-            background-color: white;
-            transition: all 0.3s ease-in-out;
+            border: 1px solid var(--border-color);
+            background-color: var(--bg-secondary);
         }
         .form-section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1rem 1.5rem;
-            cursor: pointer;
-            border-bottom: 1px solid #e2e8f0;
+            border-bottom: 1px solid var(--border-color);
         }
-        .form-section-header:focus-visible {
-            outline: 2px solid #3b82f6;
-            outline-offset: 2px;
-            border-radius: 0.5rem;
-        }
-        .form-section-header.collapsed {
-            border-bottom-color: transparent;
-        }
-        .form-section-header h3 {
-            font-size: 1.125rem;
-            font-weight: 600;
-        }
-        .form-section-content {
-            padding: 1.5rem;
-            max-height: 2000px;
-            overflow: hidden;
-            transition: max-height 0.5s ease-in-out, padding 0.5s ease-in-out;
-        }
-        .form-section-content.collapsed {
-            max-height: 0;
-            padding-top: 0;
-            padding-bottom: 0;
-        }
-        .chevron-icon {
-            transition: transform 0.3s;
-        }
-        .chevron-icon.collapsed {
-            transform: rotate(-90deg);
-        }
+        .form-section-header h3 { color: var(--text-headings); }
         .dynamic-item {
-            border: 1px dashed #cbd5e1;
-            padding: 1rem;
-            border-radius: 0.5rem;
-            margin-bottom: 1rem;
-            position: relative;
-            background-color: #f8fafc;
+            border: 1px dashed var(--border-dashed);
+            background-color: var(--dynamic-item-bg);
         }
-        .item-controls {
-            position: absolute;
-            top: 0.5rem;
-            right: 0.5rem;
-            display: flex;
-            gap: 0.25rem;
+        .preview-pane { background-color: var(--preview-bg); }
+        .modal-content { background-color: var(--modal-bg); }
+        input, textarea, select {
+            background-color: var(--input-bg);
+            border-color: var(--border-color);
+            color: var(--text-primary);
         }
-        .control-btn {
-            background-color: #64748b;
-            color: white;
-            border: none;
-            border-radius: 9999px;
-            width: 1.75rem; /* Increased size for touch targets */
-            height: 1.75rem; /* Increased size for touch targets */
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: background-color 0.2s;
+        input::placeholder, textarea::placeholder {
+            color: var(--text-secondary);
         }
+        .form-section, .form-section-header, .form-section-content, .chevron-icon, body {
+            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+        }
+        
+        .form-section { border-radius: 0.5rem; margin-bottom: 1.5rem; }
+        .form-section-header { display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.5rem; cursor: pointer; }
+        .form-section-header:focus-visible { outline: 2px solid #3b82f6; outline-offset: 2px; border-radius: 0.5rem; }
+        .form-section-header.collapsed { border-bottom-color: transparent; }
+        .form-section-header h3 { font-size: 1.125rem; font-weight: 600; }
+        .form-section-content { padding: 1.5rem; max-height: 2000px; overflow: hidden; transition: max-height 0.5s ease-in-out, padding 0.5s ease-in-out; }
+        .form-section-content.collapsed { max-height: 0; padding-top: 0; padding-bottom: 0; }
+        .chevron-icon { transition: transform 0.3s; }
+        .chevron-icon.collapsed { transform: rotate(-90deg); }
+        .item-controls { position: absolute; top: 0.5rem; right: 0.5rem; display: flex; gap: 0.25rem; }
+        .control-btn { background-color: #64748b; color: white; border: none; border-radius: 9999px; width: 1.75rem; height: 1.75rem; font-weight: bold; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background-color 0.2s, opacity 0.2s; }
+        .control-btn:disabled { opacity: 0.4; cursor: not-allowed; }
         .control-btn.remove-btn { background-color: #ef4444; }
-        .control-btn:hover { background-color: #475569; }
-        .control-btn.remove-btn:hover { background-color: #dc2626; }
-
-        .preview-pane {
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            line-height: 1.6;
-        }
+        .control-btn:not(:disabled):hover { background-color: #475569; }
+        .control-btn.remove-btn:not(:disabled):hover { background-color: #dc2626; }
+        .preview-pane { white-space: pre-wrap; word-wrap: break-word; line-height: 1.6; }
         .preview-pane a { color: #3b82f6; text-decoration: underline; }
         .preview-pane strong, .preview-pane b { font-weight: bold; }
         .copy-button { transition: all 0.2s ease-in-out; }
         .copy-button:active { transform: scale(0.95); }
-        .copy-success { background-color: #22c55e !important; color: white !important; }
-
-        /* Modal Styles */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 100;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgba(0,0,0,0.5);
-            align-items: center;
-            justify-content: center;
-        }
-        .modal-content {
-            background-color: #fefefe;
-            padding: 2rem;
-            border: 1px solid #888;
-            width: 90%;
-            max-width: 600px;
-            border-radius: 0.5rem;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-            position: relative;
-        }
-        .close-button {
-            color: #aaa;
-            position: absolute;
-            top: 0.5rem;
-            right: 1rem;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-        /* Toast Notification Styles */
-        #toast-container {
-            position: fixed;
-            top: 1.5rem;
-            right: 1.5rem;
-            z-index: 9999;
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-        .toast {
-            padding: 1rem 1.5rem;
-            border-radius: 0.5rem;
-            color: white;
-            font-weight: 500;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            opacity: 0;
-            transform: translateX(100%);
-            transition: all 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
-        }
-        .toast.show {
-            opacity: 1;
-            transform: translateX(0);
-        }
+        .modal { display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); align-items: center; justify-content: center; }
+        .modal-content { padding: 2rem; border: 1px solid #888; width: 90%; max-width: 600px; border-radius: 0.5rem; box-shadow: 0 5px 15px rgba(0,0,0,0.3); position: relative; }
+        .close-button { color: #aaa; position: absolute; top: 0.5rem; right: 1rem; font-size: 28px; font-weight: bold; cursor: pointer; }
+        #toast-container { position: fixed; top: 1.5rem; right: 1.5rem; z-index: 9999; display: flex; flex-direction: column; gap: 0.5rem; }
+        .toast { padding: 1rem 1.5rem; border-radius: 0.5rem; color: white; font-weight: 500; box-shadow: 0 4px 6px rgba(0,0,0,0.1); opacity: 0; transform: translateX(100%); transition: all 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55); }
+        .toast.show { opacity: 1; transform: translateX(0); }
         .toast.success { background-color: #22c55e; }
         .toast.error { background-color: #ef4444; }
+        .toast.info { background-color: #3b82f6; }
+        .sticky-header.scrolled { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
+        html.dark .sticky-header.scrolled { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3); }
+        .action-btn { transition: transform 0.1s ease-in-out; }
+        .action-btn:active { transform: scale(0.97); }
+        .empty-state { color: var(--text-secondary); text-align: center; padding: 1rem; font-style: italic; }
+
+        /* Dark Mode Toggle */
+        .theme-switch-wrapper { display: flex; align-items: center; gap: 0.5rem; }
+        .theme-switch { display: inline-block; height: 24px; position: relative; width: 48px; }
+        .theme-switch input { display:none; }
+        .slider { background-color: #ccc; bottom: 0; cursor: pointer; left: 0; position: absolute; right: 0; top: 0; transition: .4s; }
+        .slider:before { background-color: #fff; bottom: 4px; content: ""; height: 16px; left: 4px; position: absolute; transition: .4s; width: 16px; }
+        input:checked + .slider { background-color: #4f46e5; }
+        input:checked + .slider:before { transform: translateX(24px); }
+        .slider.round { border-radius: 34px; }
+        .slider.round:before { border-radius: 50%; }
 
     </style>
 </head>
-<body class="bg-gray-50 text-gray-800">
+<body class="text-gray-800">
 
     <div id="toast-container"></div>
-    <div id="app-container"> <!-- Main container for ARIA hiding during modal view -->
+    <div id="app-container">
         <div class="container mx-auto p-4 md:p-8">
-            <header class="text-center mb-8">
-                <h1 class="text-4xl font-bold text-gray-900">Blacklist Post Generator (Local Storage)</h1>
-                <p class="text-lg text-gray-600 mt-2">Create, format, save, and load social media alerts.</p>
+            <header class="text-center mb-8 relative">
+                <h1 class="text-4xl font-bold text-headings">Blacklist Post Generator</h1>
+                <p class="text-lg text-secondary mt-2">Create, format, and manage social media alerts with autosave.</p>
+                <div class="absolute top-0 right-0 theme-switch-wrapper">
+                    <span class="text-sm font-medium text-secondary">☀️</span>
+                    <label class="theme-switch" for="theme-toggle">
+                        <input type="checkbox" id="theme-toggle" />
+                        <span class="slider round"></span>
+                    </label>
+                    <span class="text-sm font-medium text-secondary">🌙</span>
+                </div>
             </header>
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <!-- Form Column -->
-                <div class="lg:h-screen lg:overflow-y-auto pr-4 pb-16">
-                     <div class="flex flex-col space-y-2 mb-4 sticky top-0 bg-gray-50 py-2 z-10">
-                        <div class="grid grid-cols-2 lg:grid-cols-4 gap-2">
-                             <button id="newPost" class="w-full bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg shadow">New Post</button>
-                             <button id="loadPosts" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow">Load</button>
-                             <button id="saveOrUpdate" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg shadow">Save New</button>
-                             <button id="saveAsNew" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg shadow">Save As...</button>
+                <div id="form-column" class="lg:h-screen lg:overflow-y-auto pr-4 pb-16">
+                     <div id="sticky-header" class="sticky-header flex flex-col space-y-4 mb-4 sticky top-0 bg-main py-4 z-10 border-b border-border-color transition-shadow duration-300">
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                             <button id="newPost" class="action-btn w-full bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg shadow">New Post</button>
+                             <button id="loadPosts" class="action-btn w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow">Load Posts</button>
+                             <button id="saveOrUpdate" class="action-btn w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg shadow">Save</button>
+                             <button id="saveAsNew" class="action-btn w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg shadow">Save As...</button>
                         </div>
-                        <div id="editingStatus" class="text-center text-sm text-gray-600 font-semibold h-5" aria-live="polite"></div>
+                        <div id="editingStatus" class="text-center text-sm text-secondary font-semibold h-5" aria-live="polite"></div>
                     </div>
 
-
+                    <!-- All form sections remain the same -->
                     <div class="form-section shadow-md">
                         <div class="form-section-header" role="button" aria-expanded="true" aria-controls="mainInfoContent" tabindex="0">
                             <h3><span aria-hidden="true" class="text-xl mr-2">⚖️</span>Main Information</h3>
@@ -191,12 +154,12 @@
                         </div>
                         <div class="form-section-content" id="mainInfoContent">
                             <div class="space-y-4">
-                                <div><label for="subjectName" class="block text-sm font-medium text-gray-700 mb-1">Subject's Full Name</label><input type="text" id="subjectName" class="w-full p-2 border rounded-md"></div>
-                                <div><label for="caseType" class="block text-sm font-medium text-gray-700 mb-1">Case Type</label><input type="text" id="caseType" placeholder="e.g., Animal Cruelty Case" class="w-full p-2 border rounded-md"></div>
-                                <div><label for="location" class="block text-sm font-medium text-gray-700 mb-1">Location</label><input type="text" id="location" placeholder="e.g., Puerto Rico" class="w-full p-2 border rounded-md"></div>
-                                <div><label for="updateDate" class="block text-sm font-medium text-gray-700 mb-1">Date of Update</label><input type="date" id="updateDate" class="w-full p-2 border rounded-md"></div>
-                                <div><label for="caseUpdate" class="block text-sm font-medium text-gray-700 mb-1">Key Updates & Orders</label><textarea id="caseUpdate" placeholder="Use '▪︎' for bullet points" rows="4" class="w-full p-2 border rounded-md"></textarea></div>
-                                <div><label for="trialDate" class="block text-sm font-medium text-gray-700 mb-1">Trial / Hearing Date</label><input type="text" id="trialDate" class="w-full p-2 border rounded-md"></div>
+                                <div><label for="subjectName" class="block text-sm font-medium text-secondary mb-1">Subject's Full Name</label><input type="text" id="subjectName" class="w-full p-2 border rounded-md"></div>
+                                <div><label for="caseType" class="block text-sm font-medium text-secondary mb-1">Case Type</label><input type="text" id="caseType" placeholder="e.g., Animal Cruelty Case" class="w-full p-2 border rounded-md"></div>
+                                <div><label for="location" class="block text-sm font-medium text-secondary mb-1">Location</label><input type="text" id="location" placeholder="e.g., Puerto Rico" class="w-full p-2 border rounded-md"></div>
+                                <div><label for="updateDate" class="block text-sm font-medium text-secondary mb-1">Date of Update</label><input type="date" id="updateDate" class="w-full p-2 border rounded-md"></div>
+                                <div><label for="caseUpdate" class="block text-sm font-medium text-secondary mb-1">Key Updates & Orders</label><textarea id="caseUpdate" placeholder="Use '▪︎' for bullet points" rows="4" class="w-full p-2 border rounded-md"></textarea></div>
+                                <div><label for="trialDate" class="block text-sm font-medium text-secondary mb-1">Trial / Hearing Date</label><input type="text" id="trialDate" class="w-full p-2 border rounded-md"></div>
                             </div>
                         </div>
                     </div>
@@ -208,7 +171,7 @@
                         </div>
                         <div class="form-section-content" id="individualsContent">
                             <div id="individualsContainer" class="space-y-4"></div>
-                            <button id="addIndividual" class="mt-4 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg w-full">Add Individual</button>
+                            <button id="addIndividual" class="mt-4 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg w-full action-btn">Add Individual</button>
                         </div>
                     </div>
 
@@ -219,7 +182,7 @@
                         </div>
                         <div class="form-section-content" id="aliasesContent">
                             <div id="aliasesContainer" class="space-y-4"></div>
-                            <button id="addAlias" class="mt-4 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg w-full">Add Alias</button>
+                            <button id="addAlias" class="mt-4 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg w-full action-btn">Add Alias</button>
                         </div>
                     </div>
 
@@ -230,7 +193,7 @@
                         </div>
                         <div class="form-section-content" id="organizationsContent">
                             <div id="organizationsContainer" class="space-y-4"></div>
-                            <button id="addOrganization" class="mt-4 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg w-full">Add Organization/Group</button>
+                            <button id="addOrganization" class="mt-4 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg w-full action-btn">Add Organization/Group</button>
                         </div>
                     </div>
 
@@ -241,7 +204,7 @@
                         </div>
                         <div class="form-section-content" id="legalRegContent">
                             <div id="legalRegistrationsContainer" class="space-y-4"></div>
-                            <button id="addLegalRegistration" class="mt-4 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg w-full">Add Legal Document</button>
+                            <button id="addLegalRegistration" class="mt-4 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg w-full action-btn">Add Legal Document</button>
                         </div>
                     </div>
                     
@@ -252,7 +215,7 @@
                         </div>
                         <div class="form-section-content" id="fraudAllegationsContent">
                             <div id="fraudulentSolicitationsContainer" class="space-y-4"></div>
-                            <button id="addFraudulentSolicitation" class="mt-4 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg w-full">Add Allegation</button>
+                            <button id="addFraudulentSolicitation" class="mt-4 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg w-full action-btn">Add Allegation</button>
                         </div>
                     </div>
 
@@ -263,7 +226,7 @@
                         </div>
                         <div class="form-section-content" id="warningsContent">
                             <div id="warningsAndAccountsContainer" class="space-y-4"></div>
-                            <button id="addWarningAndAccount" class="mt-4 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg w-full">Add Account</button>
+                            <button id="addWarningAndAccount" class="mt-4 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg w-full action-btn">Add Account</button>
                         </div>
                     </div>
 
@@ -274,11 +237,10 @@
                         </div>
                         <div class="form-section-content" id="investigationsContent">
                             <div id="investigationsContainer" class="space-y-4"></div>
-                            <button id="addInvestigation" class="mt-4 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg w-full">Add Investigation</button>
+                            <button id="addInvestigation" class="mt-4 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg w-full action-btn">Add Investigation</button>
                         </div>
                     </div>
 
-                    <!-- NEW SECTION: Enhanced Documentation & Evidence -->
                     <div class="form-section shadow-md">
                          <div class="form-section-header" role="button" aria-expanded="true" aria-controls="evidenceContent" tabindex="0">
                             <h3><span aria-hidden="true" class="text-xl mr-2">📂</span>Enhanced Documentation & Evidence</h3>
@@ -286,7 +248,7 @@
                         </div>
                         <div class="form-section-content" id="evidenceContent">
                             <div id="evidenceContainer" class="space-y-4"></div>
-                            <button id="addEvidence" class="mt-4 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg w-full">Add Evidence</button>
+                            <button id="addEvidence" class="mt-4 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg w-full action-btn">Add Evidence</button>
                         </div>
                     </div>
 
@@ -297,7 +259,7 @@
                         </div>
                         <div class="form-section-content" id="articlesContent">
                             <div id="articlesContainer" class="space-y-4"></div>
-                            <button id="addArticle" class="mt-4 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg w-full">Add Article/Document</button>
+                            <button id="addArticle" class="mt-4 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg w-full action-btn">Add Article/Document</button>
                         </div>
                     </div>
 
@@ -308,9 +270,9 @@
                         </div>
                         <div class="form-section-content" id="summaryContent">
                              <div class="space-y-4">
-                                <div><label for="backgroundInfo" class="block text-sm font-medium text-gray-700 mb-1">Background Information</label><textarea id="backgroundInfo" rows="6" class="w-full p-2 border rounded-md"></textarea></div>
-                                <div><label for="emergingReports" class="block text-sm font-medium text-gray-700 mb-1">Emerging Reports</label><textarea id="emergingReports" rows="3" class="w-full p-2 border rounded-md"></textarea></div>
-                                <div><label for="hashtags" class="block text-sm font-medium text-gray-700 mb-1">Hashtags</label><input type="text" id="hashtags" placeholder="#Hashtag1 #Hashtag2" class="w-full p-2 border rounded-md"></div>
+                                <div><label for="backgroundInfo" class="block text-sm font-medium text-secondary mb-1">Background Information</label><textarea id="backgroundInfo" rows="6" class="w-full p-2 border rounded-md"></textarea></div>
+                                <div><label for="emergingReports" class="block text-sm font-medium text-secondary mb-1">Emerging Reports</label><textarea id="emergingReports" rows="3" class="w-full p-2 border rounded-md"></textarea></div>
+                                <div><label for="hashtags" class="block text-sm font-medium text-secondary mb-1">Hashtags</label><input type="text" id="hashtags" placeholder="#Hashtag1 #Hashtag2" class="w-full p-2 border rounded-md"></div>
                             </div>
                         </div>
                     </div>
@@ -318,14 +280,14 @@
 
                 <!-- Preview Column -->
                 <div class="lg:h-screen lg:overflow-y-auto">
-                    <div class="bg-white p-6 rounded-lg shadow-lg sticky top-8">
+                    <div class="bg-secondary p-6 rounded-lg shadow-lg sticky top-8">
                         <div class="flex justify-between items-center mb-4">
-                            <h2 class="text-2xl font-bold">Live Preview</h2>
-                            <span id="charCount" class="text-sm font-medium text-gray-500" aria-live="polite">0 characters</span>
+                            <h2 class="text-2xl font-bold text-headings">Live Preview</h2>
+                            <span id="charCount" class="text-sm font-medium text-secondary" aria-live="polite">0 characters</span>
                         </div>
-                        <div id="preview" class="preview-pane bg-gray-100 p-4 rounded-md h-96 overflow-y-auto"></div>
-                        <button id="copyButton" class="copy-button mt-4 w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg text-lg shadow-md">
-                            Copy to Clipboard
+                        <div id="preview" class="preview-pane p-4 rounded-md h-96 overflow-y-auto"></div>
+                        <button id="copyButton" class="copy-button mt-4 w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg text-lg shadow-md action-btn">
+                            <span id="copyButtonText">Copy to Clipboard</span>
                         </button>
                     </div>
                 </div>
@@ -337,9 +299,15 @@
     <div id="loadPostsModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="loadPostsModalTitle">
         <div class="modal-content">
             <button class="close-button" id="closeLoadModal" aria-label="Close modal">&times;</button>
-            <h2 id="loadPostsModalTitle" class="text-2xl font-bold mb-4">Load a Saved Post</h2>
-            <div id="savedPostsList" class="space-y-2 max-h-96 overflow-y-auto">
-                <p>No saved posts found.</p>
+            <h2 id="loadPostsModalTitle" class="text-2xl font-bold mb-4 text-headings">Load a Saved Post</h2>
+            <input type="search" id="postSearchInput" placeholder="Search posts by name..." class="w-full p-2 border rounded-md mb-4">
+            <div id="savedPostsList" class="space-y-2 max-h-80 overflow-y-auto">
+                <p class="text-secondary">No saved posts found.</p>
+            </div>
+            <div class="mt-6 pt-4 border-t border-border-color flex gap-2">
+                <button id="exportPostsBtn" class="action-btn w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg">Export All</button>
+                <button id="importPostsBtn" class="action-btn w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded-lg">Import</button>
+                <input type="file" id="importFileInput" class="hidden" accept=".json">
             </div>
         </div>
     </div>
@@ -347,11 +315,11 @@
     <!-- Confirmation Modal -->
     <div id="confirmModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="confirmModalTitle">
         <div class="modal-content">
-            <h2 id="confirmModalTitle" class="text-xl font-bold mb-4">Confirm Action</h2>
-            <p id="confirmModalText" class="mb-6">Are you sure?</p>
+            <h2 id="confirmModalTitle" class="text-xl font-bold mb-4 text-headings">Confirm Action</h2>
+            <p id="confirmModalText" class="mb-6 text-primary">Are you sure?</p>
             <div class="flex justify-end space-x-4">
-                <button id="confirmCancelBtn" class="px-4 py-2 bg-gray-300 hover:bg-gray-400 rounded-md">Cancel</button>
-                <button id="confirmOkBtn" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md">Confirm</button>
+                <button id="confirmCancelBtn" class="action-btn px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-md">Cancel</button>
+                <button id="confirmOkBtn" class="action-btn px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md">Confirm</button>
             </div>
         </div>
     </div>
@@ -362,81 +330,97 @@
         let currentPostId = null;
         let currentPostName = 'New Post';
         const LOCAL_STORAGE_KEY = 'blacklistGeneratorPosts';
+        const AUTOSAVE_KEY = 'blacklistGeneratorAutosave';
+        const THEME_KEY = 'blacklistGeneratorTheme';
+        let autosaveInterval;
+        let _confirmCallbacks = { onConfirm: null, onCancel: null };
 
         // --- DOM Elements ---
         const appContainer = document.getElementById('app-container');
-        const form = document.querySelector('body');
+        const formColumn = document.getElementById('form-column');
+        const stickyHeader = document.getElementById('sticky-header');
         const preview = document.getElementById('preview');
         const charCount = document.getElementById('charCount');
         const editingStatus = document.getElementById('editingStatus');
+        const themeToggle = document.getElementById('theme-toggle');
+        const copyButtonText = document.getElementById('copyButtonText');
 
         const fields = {
-            subjectName: document.getElementById('subjectName'),
-            caseType: document.getElementById('caseType'),
-            location: document.getElementById('location'),
-            updateDate: document.getElementById('updateDate'),
-            caseUpdate: document.getElementById('caseUpdate'),
-            trialDate: document.getElementById('trialDate'),
-            backgroundInfo: document.getElementById('backgroundInfo'),
-            emergingReports: document.getElementById('emergingReports'),
+            subjectName: document.getElementById('subjectName'), caseType: document.getElementById('caseType'),
+            location: document.getElementById('location'), updateDate: document.getElementById('updateDate'),
+            caseUpdate: document.getElementById('caseUpdate'), trialDate: document.getElementById('trialDate'),
+            backgroundInfo: document.getElementById('backgroundInfo'), emergingReports: document.getElementById('emergingReports'),
             hashtags: document.getElementById('hashtags'),
         };
 
         const containers = {
-            individuals: document.getElementById('individualsContainer'),
-            aliases: document.getElementById('aliasesContainer'),
-            organizations: document.getElementById('organizationsContainer'),
-            legalRegistrations: document.getElementById('legalRegistrationsContainer'),
-            fraudulentSolicitations: document.getElementById('fraudulentSolicitationsContainer'),
-            warningsAndAccounts: document.getElementById('warningsAndAccountsContainer'),
-            investigations: document.getElementById('investigationsContainer'),
-            evidence: document.getElementById('evidenceContainer'),
+            individuals: document.getElementById('individualsContainer'), aliases: document.getElementById('aliasesContainer'),
+            organizations: document.getElementById('organizationsContainer'), legalRegistrations: document.getElementById('legalRegistrationsContainer'),
+            fraudulentSolicitations: document.getElementById('fraudulentSolicitationsContainer'), warningsAndAccounts: document.getElementById('warningsAndAccountsContainer'),
+            investigations: document.getElementById('investigationsContainer'), evidence: document.getElementById('evidenceContainer'),
             articles: document.getElementById('articlesContainer'),
         };
 
         const buttons = {
-            addIndividual: document.getElementById('addIndividual'),
-            addAlias: document.getElementById('addAlias'),
-            addOrganization: document.getElementById('addOrganization'),
-            addLegalRegistration: document.getElementById('addLegalRegistration'),
-            addFraudulentSolicitation: document.getElementById('addFraudulentSolicitation'),
-            addWarningAndAccount: document.getElementById('addWarningAndAccount'),
-            addInvestigation: document.getElementById('addInvestigation'),
-            addEvidence: document.getElementById('addEvidence'),
-            addArticle: document.getElementById('addArticle'),
-            newPost: document.getElementById('newPost'),
-            copy: document.getElementById('copyButton'),
-            saveOrUpdate: document.getElementById('saveOrUpdate'),
-            saveAsNew: document.getElementById('saveAsNew'),
-            load: document.getElementById('loadPosts'),
+            addIndividual: document.getElementById('addIndividual'), addAlias: document.getElementById('addAlias'),
+            addOrganization: document.getElementById('addOrganization'), addLegalRegistration: document.getElementById('addLegalRegistration'),
+            addFraudulentSolicitation: document.getElementById('addFraudulentSolicitation'), addWarningAndAccount: document.getElementById('addWarningAndAccount'),
+            addInvestigation: document.getElementById('addInvestigation'), addEvidence: document.getElementById('addEvidence'),
+            addArticle: document.getElementById('addArticle'), newPost: document.getElementById('newPost'),
+            copy: document.getElementById('copyButton'), saveOrUpdate: document.getElementById('saveOrUpdate'),
+            saveAsNew: document.getElementById('saveAsNew'), load: document.getElementById('loadPosts'),
+            exportPostsBtn: document.getElementById('exportPostsBtn'), importPostsBtn: document.getElementById('importPostsBtn'),
         };
         
         const loadPostsModal = document.getElementById('loadPostsModal');
         const confirmModal = document.getElementById('confirmModal');
         const closeLoadModalBtn = document.getElementById('closeLoadModal');
         const savedPostsList = document.getElementById('savedPostsList');
+        const postSearchInput = document.getElementById('postSearchInput');
+        const importFileInput = document.getElementById('importFileInput');
 
         // --- Debounce Function ---
         function debounce(func, delay) { let timeoutId; return function(...args) { clearTimeout(timeoutId); timeoutId = setTimeout(() => { func.apply(this, args); }, delay); }; }
         const debouncedUpdatePreview = debounce(updatePreview, 250);
 
         // --- Event Listeners ---
-        form.addEventListener('input', debouncedUpdatePreview);
+        formColumn.addEventListener('input', (e) => {
+            if (e.target.closest('.form-section') || e.target.closest('.summary-section')) {
+                debouncedUpdatePreview();
+                startAutosave();
+            }
+        });
+        formColumn.addEventListener('scroll', () => {
+            stickyHeader.classList.toggle('scrolled', formColumn.scrollTop > 0);
+        });
         Object.values(buttons).forEach(btn => btn?.addEventListener('click', handleButtonClick));
         document.querySelectorAll('.form-section-header').forEach(header => {
             header.addEventListener('click', toggleSection);
             header.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleSection(e); } });
         });
         document.addEventListener('click', handleDynamicItemControls);
+        themeToggle.addEventListener('change', toggleTheme);
+        postSearchInput.addEventListener('input', openLoadModal);
         
         // --- Modal Listeners ---
-        function setupModalListeners(modal, closeBtn) { closeBtn.addEventListener('click', () => closeModal(modal)); }
-        setupModalListeners(loadPostsModal, closeLoadModalBtn);
-        document.getElementById('confirmCancelBtn').addEventListener('click', () => closeModal(confirmModal));
+        closeLoadModalBtn.addEventListener('click', () => closeModal(loadPostsModal));
+        
+        function handleConfirm(isConfirmed) {
+            if (isConfirmed && typeof _confirmCallbacks.onConfirm === 'function') {
+                _confirmCallbacks.onConfirm();
+            } else if (!isConfirmed && typeof _confirmCallbacks.onCancel === 'function') {
+                _confirmCallbacks.onCancel();
+            }
+            closeModal(confirmModal);
+        }
+
+        document.getElementById('confirmOkBtn').addEventListener('click', () => handleConfirm(true));
+        document.getElementById('confirmCancelBtn').addEventListener('click', () => handleConfirm(false));
+
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 if (loadPostsModal.style.display === 'flex') closeModal(loadPostsModal);
-                if (confirmModal.style.display === 'flex') closeModal(confirmModal);
+                if (confirmModal.style.display === 'flex') handleConfirm(false);
             }
         });
 
@@ -452,23 +436,35 @@
                 case 'addInvestigation': addDynamicItem('investigation'); break;
                 case 'addEvidence': addDynamicItem('evidence'); break;
                 case 'addArticle': addDynamicItem('article'); break;
-                case 'newPost': clearForm(); break;
+                case 'newPost': confirmAndClearForm(); break;
                 case 'copyButton': copyToClipboard(); break;
                 case 'saveOrUpdate': saveOrUpdatePost(); break;
                 case 'saveAsNew': saveNewPost(true); break;
                 case 'loadPosts': openLoadModal(); break;
+                case 'exportPostsBtn': exportPosts(); break;
+                case 'importPostsBtn': importFileInput.click(); break;
             }
         }
         
+        importFileInput.addEventListener('change', handleImport);
+
         function handleDynamicItemControls(e) {
             const button = e.target.closest('.control-btn');
             if (!button) return;
             const item = button.closest('.dynamic-item');
             const container = item.parentElement;
-            if (button.getAttribute('aria-label') === 'Remove item') { item.remove(); } 
-            else if (button.getAttribute('aria-label') === 'Move item up') { const prevSibling = item.previousElementSibling; if (prevSibling) container.insertBefore(item, prevSibling); } 
-            else if (button.getAttribute('aria-label') === 'Move item down') { const nextSibling = item.nextElementSibling; if (nextSibling) container.insertBefore(nextSibling, item); }
+            if (button.getAttribute('aria-label') === 'Remove item') {
+                item.remove();
+            } else if (button.getAttribute('aria-label') === 'Move item up') {
+                const prevSibling = item.previousElementSibling;
+                if (prevSibling) container.insertBefore(item, prevSibling);
+            } else if (button.getAttribute('aria-label') === 'Move item down') {
+                const nextSibling = item.nextElementSibling;
+                if (nextSibling) container.insertBefore(nextSibling, item);
+            }
+            updateItemControls(container);
             debouncedUpdatePreview();
+            startAutosave();
         }
 
         function toggleSection(e) {
@@ -483,50 +479,48 @@
         }
 
         // --- Dynamic Item Management ---
-        // DEBUG FIX: Create a clear mapping from item type to its container's key to prevent errors.
         const typeToContainerKey = {
-            individual: 'individuals',
-            alias: 'aliases',
-            organization: 'organizations',
-            legalRegistration: 'legalRegistrations',
-            fraudulentSolicitation: 'fraudulentSolicitations',
-            warningAndAccount: 'warningsAndAccounts',
-            investigation: 'investigations',
-            evidence: 'evidence', // This mapping fixes the bug
-            article: 'articles'
+            individual: 'individuals', alias: 'aliases', organization: 'organizations',
+            legalRegistration: 'legalRegistrations', fraudulentSolicitation: 'fraudulentSolicitations',
+            warningAndAccount: 'warningsAndAccounts', investigation: 'investigations',
+            evidence: 'evidence', article: 'articles'
         };
 
         const itemTemplates = {
-            individual: (id) => `<div><label for="individual-name-${id}" class="block text-sm font-medium text-gray-700 mb-1">Full Name</label><input type="text" id="individual-name-${id}" class="w-full p-2 border rounded-md mb-2 individual-name"></div><div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-2"><div><label for="individual-dob-${id}" class="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label><input type="text" id="individual-dob-${id}" class="w-full p-2 border rounded-md individual-dob"></div><div><label for="individual-phone-${id}" class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label><input type="text" id="individual-phone-${id}" class="w-full p-2 border rounded-md individual-phone"></div></div><div><label for="individual-email-${id}" class="block text-sm font-medium text-gray-700 mb-1">Email Address</label><input type="text" id="individual-email-${id}" class="w-full p-2 border rounded-md mb-2 individual-email"></div><div><label for="individual-address-${id}" class="block text-sm font-medium text-gray-700 mb-1">Last Known Address</label><textarea id="individual-address-${id}" rows="2" class="w-full p-2 border rounded-md mb-2 individual-address"></textarea></div><h4 class="font-semibold text-sm mt-3 mb-1 text-gray-600">Social Media Links</h4><div class="space-y-2"><input type="text" placeholder="Facebook URL" class="w-full p-2 border rounded-md individual-fb-link" aria-label="Individual Facebook URL"><input type="text" placeholder="Instagram URL" class="w-full p-2 border rounded-md individual-ig-link" aria-label="Individual Instagram URL"><input type="text" placeholder="X (Twitter) URL" class="w-full p-2 border rounded-md individual-x-link" aria-label="Individual X (Twitter) URL"><input type="text" placeholder="Other URLs (comma-sep)" class="w-full p-2 border rounded-md individual-other-links" aria-label="Individual Other URLs"></div>`,
-            alias: (id) => `<div><label for="alias-name-${id}" class="block text-sm font-medium text-gray-700 mb-1">Alias Name</label><input type="text" id="alias-name-${id}" class="w-full p-2 border rounded-md alias-name"></div>`,
-            organization: (id) => `<div><label for="org-name-${id}" class="block text-sm font-medium text-gray-700 mb-1">Organization Name</label><input type="text" id="org-name-${id}" class="w-full p-2 border rounded-md mb-2 org-name"></div><div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-2"><div><label for="org-ein-${id}" class="block text-sm font-medium text-gray-700 mb-1">EIN</label><input type="text" id="org-ein-${id}" class="w-full p-2 border rounded-md org-ein"></div><div><label for="org-license-${id}" class="block text-sm font-medium text-gray-700 mb-1">License #</label><input type="text" id="org-license-${id}" class="w-full p-2 border rounded-md org-license"></div></div><div><label for="org-record-${id}" class="block text-sm font-medium text-gray-700 mb-1">Official Record Link</label><input type="text" id="org-record-${id}" class="w-full p-2 border rounded-md mb-2 org-record-link"></div><div><label for="org-status-${id}" class="block text-sm font-medium text-gray-700 mb-1">Status</label><input type="text" id="org-status-${id}" placeholder="e.g., Active, CLOSED" class="w-full p-2 border rounded-md mb-2 org-status"></div><h4 class="font-semibold text-sm mt-3 mb-1 text-gray-600">Links</h4><div class="grid grid-cols-1 md:grid-cols-2 gap-2"><input type="text" placeholder="Facebook URL" class="w-full p-2 border rounded-md org-fb-link" aria-label="Organization Facebook URL"><input type="text" placeholder="Instagram URL" class="w-full p-2 border rounded-md org-ig-link" aria-label="Organization Instagram URL"><input type="text" placeholder="X (Twitter) URL" class="w-full p-2 border rounded-md org-x-link" aria-label="Organization X (Twitter) URL"><input type="text" placeholder="Website URL" class="w-full p-2 border rounded-md org-website-link" aria-label="Organization Website URL"></div><div class="mt-2"><input type="text" placeholder="Other URLs (comma-sep)" class="w-full p-2 border rounded-md org-other-links" aria-label="Organization Other URLs"></div>`,
-            legalRegistration: (id) => `<div><label for="legal-title-${id}" class="block text-sm font-medium text-gray-700 mb-1">Document Title</label><input type="text" id="legal-title-${id}" class="w-full p-2 border rounded-md mb-2 legal-registration-title"></div><div><label for="legal-url-${id}" class="block text-sm font-medium text-gray-700 mb-1">URL</label><input type="text" id="legal-url-${id}" class="w-full p-2 border rounded-md mb-2 legal-registration-url"></div>`,
-            fraudulentSolicitation: (id) => `<div><label for="fraud-text-${id}" class="block text-sm font-medium text-gray-700 mb-1">Allegation Details</label><textarea id="fraud-text-${id}" rows="3" class="w-full p-2 border rounded-md fraudulent-solicitation-text"></textarea></div>`,
-            warningAndAccount: (id) => `<div><label for="warning-text-${id}" class="block text-sm font-medium text-gray-700 mb-1">Account/Warning Details</label><textarea id="warning-text-${id}" rows="3" class="w-full p-2 border rounded-md warning-account-text"></textarea></div>`,
-            investigation: (id) => `<div><label for="inv-title-${id}" class="block text-sm font-medium text-gray-700 mb-1">Title</label><input type="text" id="inv-title-${id}" class="w-full p-2 border rounded-md mb-2 investigation-title"></div><div><label for="inv-url-${id}" class="block text-sm font-medium text-gray-700 mb-1">URL</label><input type="text" id="inv-url-${id}" class="w-full p-2 border rounded-md mb-2 investigation-url"></div>`,
-            evidence: (id) => `<div><label for="evidence-title-${id}" class="block text-sm font-medium text-gray-700 mb-1">Title</label><input type="text" id="evidence-title-${id}" class="w-full p-2 border rounded-md mb-2 evidence-title"></div><div><label for="evidence-desc-${id}" class="block text-sm font-medium text-gray-700 mb-1">Description</label><textarea id="evidence-desc-${id}" rows="3" class="w-full p-2 border rounded-md mb-2 evidence-description"></textarea></div><div class="grid grid-cols-1 md:grid-cols-2 gap-2"><div><label for="evidence-url-${id}" class="block text-sm font-medium text-gray-700 mb-1">URL</label><input type="text" id="evidence-url-${id}" class="w-full p-2 border rounded-md evidence-url"></div><div><label for="evidence-date-${id}" class="block text-sm font-medium text-gray-700 mb-1">Date (Optional)</label><input type="date" id="evidence-date-${id}" class="w-full p-2 border rounded-md evidence-date"></div></div>`,
-            article: (id) => `<div><label for="art-title-${id}" class="block text-sm font-medium text-gray-700 mb-1">Title</label><input type="text" id="art-title-${id}" class="w-full p-2 border rounded-md mb-2 article-title"></div><div><label for="art-url-${id}" class="block text-sm font-medium text-gray-700 mb-1">URL</label><input type="text" id="art-url-${id}" class="w-full p-2 border rounded-md mb-2 article-url"></div>`
+            individual: (id) => `<div><label for="individual-name-${id}" class="block text-sm font-medium text-secondary mb-1">Full Name</label><input type="text" id="individual-name-${id}" class="w-full p-2 border rounded-md mb-2 individual-name"></div><div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-2"><div><label for="individual-dob-${id}" class="block text-sm font-medium text-secondary mb-1">Date of Birth</label><input type="text" id="individual-dob-${id}" class="w-full p-2 border rounded-md individual-dob"></div><div><label for="individual-phone-${id}" class="block text-sm font-medium text-secondary mb-1">Phone Number</label><input type="tel" id="individual-phone-${id}" class="w-full p-2 border rounded-md individual-phone"></div></div><div><label for="individual-email-${id}" class="block text-sm font-medium text-secondary mb-1">Email Address</label><input type="email" id="individual-email-${id}" class="w-full p-2 border rounded-md mb-2 individual-email"></div><div><label for="individual-address-${id}" class="block text-sm font-medium text-secondary mb-1">Last Known Address</label><textarea id="individual-address-${id}" rows="2" class="w-full p-2 border rounded-md mb-2 individual-address"></textarea></div><h4 class="font-semibold text-sm mt-3 mb-1 text-gray-600 dark:text-gray-400">Social Media Links</h4><div class="space-y-2"><input type="url" placeholder="Facebook URL" class="w-full p-2 border rounded-md individual-fb-link" aria-label="Individual Facebook URL"><input type="url" placeholder="Instagram URL" class="w-full p-2 border rounded-md individual-ig-link" aria-label="Individual Instagram URL"><input type="url" placeholder="X (Twitter) URL" class="w-full p-2 border rounded-md individual-x-link" aria-label="Individual X (Twitter) URL"><input type="url" placeholder="Other URLs (comma-sep)" class="w-full p-2 border rounded-md individual-other-links" aria-label="Individual Other URLs"></div>`,
+            alias: (id) => `<div><label for="alias-name-${id}" class="block text-sm font-medium text-secondary mb-1">Alias Name</label><input type="text" id="alias-name-${id}" class="w-full p-2 border rounded-md alias-name"></div>`,
+            organization: (id) => `<div><label for="org-name-${id}" class="block text-sm font-medium text-secondary mb-1">Organization Name</label><input type="text" id="org-name-${id}" class="w-full p-2 border rounded-md mb-2 org-name"></div><div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-2"><div><label for="org-ein-${id}" class="block text-sm font-medium text-secondary mb-1">EIN</label><input type="text" id="org-ein-${id}" class="w-full p-2 border rounded-md org-ein"></div><div><label for="org-license-${id}" class="block text-sm font-medium text-secondary mb-1">License #</label><input type="text" id="org-license-${id}" class="w-full p-2 border rounded-md org-license"></div></div><div><label for="org-record-${id}" class="block text-sm font-medium text-secondary mb-1">Official Record Link</label><input type="url" id="org-record-${id}" class="w-full p-2 border rounded-md mb-2 org-record-link"></div><div><label for="org-status-${id}" class="block text-sm font-medium text-secondary mb-1">Status</label><input type="text" id="org-status-${id}" placeholder="e.g., Active, CLOSED" class="w-full p-2 border rounded-md mb-2 org-status"></div><h4 class="font-semibold text-sm mt-3 mb-1 text-gray-600 dark:text-gray-400">Links</h4><div class="grid grid-cols-1 md:grid-cols-2 gap-2"><input type="url" placeholder="Facebook URL" class="w-full p-2 border rounded-md org-fb-link" aria-label="Organization Facebook URL"><input type="url" placeholder="Instagram URL" class="w-full p-2 border rounded-md org-ig-link" aria-label="Organization Instagram URL"><input type="url" placeholder="X (Twitter) URL" class="w-full p-2 border rounded-md org-x-link" aria-label="Organization X (Twitter) URL"><input type="url" placeholder="Website URL" class="w-full p-2 border rounded-md org-website-link" aria-label="Organization Website URL"></div><div class="mt-2"><input type="text" placeholder="Other URLs (comma-sep)" class="w-full p-2 border rounded-md org-other-links" aria-label="Organization Other URLs"></div>`,
+            legalRegistration: (id) => `<div><label for="legal-title-${id}" class="block text-sm font-medium text-secondary mb-1">Document Title</label><input type="text" id="legal-title-${id}" class="w-full p-2 border rounded-md mb-2 legal-registration-title"></div><div><label for="legal-url-${id}" class="block text-sm font-medium text-secondary mb-1">URL</label><input type="url" id="legal-url-${id}" class="w-full p-2 border rounded-md mb-2 legal-registration-url"></div>`,
+            fraudulentSolicitation: (id) => `<div><label for="fraud-text-${id}" class="block text-sm font-medium text-secondary mb-1">Allegation Details</label><textarea id="fraud-text-${id}" rows="3" class="w-full p-2 border rounded-md fraudulent-solicitation-text"></textarea></div>`,
+            warningAndAccount: (id) => `<div><label for="warning-text-${id}" class="block text-sm font-medium text-secondary mb-1">Account/Warning Details</label><textarea id="warning-text-${id}" rows="3" class="w-full p-2 border rounded-md warning-account-text"></textarea></div>`,
+            investigation: (id) => `<div><label for="inv-title-${id}" class="block text-sm font-medium text-secondary mb-1">Title</label><input type="text" id="inv-title-${id}" class="w-full p-2 border rounded-md mb-2 investigation-title"></div><div><label for="inv-url-${id}" class="block text-sm font-medium text-secondary mb-1">URL</label><input type="url" id="inv-url-${id}" class="w-full p-2 border rounded-md mb-2 investigation-url"></div>`,
+            evidence: (id) => `<div><label for="evidence-title-${id}" class="block text-sm font-medium text-secondary mb-1">Title</label><input type="text" id="evidence-title-${id}" class="w-full p-2 border rounded-md mb-2 evidence-title"></div><div><label for="evidence-desc-${id}" class="block text-sm font-medium text-secondary mb-1">Description</label><textarea id="evidence-desc-${id}" rows="3" class="w-full p-2 border rounded-md mb-2 evidence-description"></textarea></div><div class="grid grid-cols-1 md:grid-cols-2 gap-2"><div><label for="evidence-url-${id}" class="block text-sm font-medium text-secondary mb-1">URL</label><input type="url" id="evidence-url-${id}" class="w-full p-2 border rounded-md evidence-url"></div><div><label for="evidence-date-${id}" class="block text-sm font-medium text-secondary mb-1">Date (Optional)</label><input type="date" id="evidence-date-${id}" class="w-full p-2 border rounded-md evidence-date"></div></div>`,
+            article: (id) => `<div><label for="art-title-${id}" class="block text-sm font-medium text-secondary mb-1">Title</label><input type="text" id="art-title-${id}" class="w-full p-2 border rounded-md mb-2 article-title"></div><div><label for="art-url-${id}" class="block text-sm font-medium text-secondary mb-1">URL</label><input type="url" id="art-url-${id}" class="w-full p-2 border rounded-md mb-2 article-url"></div>`
         };
 
-        function addDynamicItem(type) {
-            // DEBUG FIX: Use the explicit map to find the correct container key.
+        function addDynamicItem(type, options = {}) {
+            const { suppressSideEffects = false } = options;
             const containerKey = typeToContainerKey[type];
-            if (!containerKey) {
-                console.error(`No container key found for type: ${type}`);
-                return;
-            }
+            if (!containerKey) { console.error(`No container key found for type: ${type}`); return null; }
             const container = containers[containerKey];
-            if (!container) {
-                console.error(`Container not found for key: ${containerKey}`);
-                return;
-            }
+            if (!container) { console.error(`Container not found for key: ${containerKey}`); return null; }
             
             const uniqueId = `${type}-${Date.now()}`;
             const div = document.createElement('div');
             div.className = 'dynamic-item';
             div.innerHTML = `<div class="item-controls"><button class="control-btn up-btn" aria-label="Move item up">▲</button><button class="control-btn down-btn" aria-label="Move item down">▼</button><button class="control-btn remove-btn" aria-label="Remove item">X</button></div>${itemTemplates[type](uniqueId)}`;
+            
+            const emptyState = container.querySelector('.empty-state');
+            if (emptyState) emptyState.style.display = 'none';
+            
             container.appendChild(div);
-            debouncedUpdatePreview();
+
+            if (!suppressSideEffects) {
+                updateItemControls(container);
+                debouncedUpdatePreview();
+                startAutosave();
+            }
+            return div;
         }
 
         // --- Core Logic: Preview & Formatting ---
@@ -595,35 +589,148 @@
 
         function renderMarkdown(text) { return text.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\*\*\*(.*?)\*\*\*/g, '<strong><em>$1</em></strong>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\*(.*?)\*/g, '<em>$1</em>').replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>').replace(/^### (.*$)/gim, '<h3>$1</h3>').replace(/^## (.*$)/gim, '<h2>$1</h2>').replace(/^# (.*$)/gim, '<h1>$1</h1>').replace(/^\* (.*$)/gim, '<li>$1</li>').replace(/\n/g, '<br>'); }
         
-        // --- Local Storage Functions ---
+        // --- Local Storage & Data Functions ---
         function getPosts() { try { return JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY)) || []; } catch (e) { return []; } }
         function savePosts(posts) { localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(posts)); }
         function saveOrUpdatePost() { if (currentPostId) { updatePost(); } else { saveNewPost(); } }
-        function saveNewPost(isSaveAs = false) { const defaultName = fields.subjectName.value || "Untitled Post"; const postName = prompt("Enter a name for this new post:", isSaveAs ? `${currentPostName} (Copy)` : defaultName); if (!postName) return; currentPostName = postName; const data = getFormData(); data.savedAt = new Date().toISOString(); data.id = crypto.randomUUID(); currentPostId = data.id; const posts = getPosts(); posts.push(data); savePosts(posts); showToast(`Post "${postName}" saved.`, 'success'); updateUIForState(); }
-        function updatePost() { if (!currentPostId) return; const data = getFormData(); data.savedAt = new Date().toISOString(); data.id = currentPostId; let posts = getPosts(); const postIndex = posts.findIndex(p => p.id === currentPostId); if (postIndex > -1) { posts[postIndex] = data; savePosts(posts); showToast(`Post "${data.name}" updated.`, 'success'); } else { saveNewPost(); } }
-        
-        function openLoadModal() {
+        function saveNewPost(isSaveAs = false) {
+            const defaultName = fields.subjectName.value || "Untitled Post";
+            const promptName = isSaveAs && currentPostName !== 'New Post' ? `${currentPostName} (Copy)` : defaultName;
+            const postName = prompt("Enter a name for this new post:", promptName);
+            if (!postName) return;
+            
+            const data = getFormData();
+            data.name = postName;
+            data.savedAt = new Date().toISOString();
+            data.id = crypto.randomUUID();
+            
+            currentPostId = data.id;
+            currentPostName = data.name;
+
             const posts = getPosts();
-            savedPostsList.innerHTML = '';
-            if (posts.length === 0) { savedPostsList.innerHTML = '<p>No saved posts found.</p>'; openModal(loadPostsModal); return; }
-            posts.sort((a, b) => new Date(b.savedAt) - new Date(a.savedAt));
-            posts.forEach(post => {
-                const postElement = document.createElement('div'); postElement.className = 'p-2 border rounded-md hover:bg-gray-100 flex justify-between items-center';
-                const textContainer = document.createElement('div'); textContainer.className = "flex-grow cursor-pointer"; textContainer.innerHTML = `<span>${post.name}</span> <span class="text-xs text-gray-500 ml-2">${new Date(post.savedAt).toLocaleDateString()}</span>`; textContainer.onclick = () => loadSpecificPost(post.id);
-                const deleteBtn = document.createElement('button'); deleteBtn.innerHTML = '&#x1F5D1;'; deleteBtn.className = 'ml-4 p-1 text-red-500 hover:text-red-700'; deleteBtn.setAttribute('aria-label', `Delete post titled ${post.name}`); deleteBtn.onclick = (e) => { e.stopPropagation(); deletePost(post.id, post.name); };
-                postElement.appendChild(textContainer); postElement.appendChild(deleteBtn); savedPostsList.appendChild(postElement);
-            });
-            openModal(loadPostsModal);
+            posts.push(data);
+            savePosts(posts);
+            showToast(`Post "${postName}" saved.`, 'success');
+            clearAutosave();
+            updateUIForState();
+        }
+        function updatePost() {
+            if (!currentPostId) return;
+            const data = getFormData();
+            data.savedAt = new Date().toISOString();
+            data.id = currentPostId;
+            data.name = currentPostName;
+
+            let posts = getPosts();
+            const postIndex = posts.findIndex(p => p.id === currentPostId);
+            if (postIndex > -1) {
+                posts[postIndex] = data;
+                savePosts(posts);
+                showToast(`Post "${data.name}" updated.`, 'success');
+                clearAutosave();
+                updateUIForState();
+            } else {
+                saveNewPost();
+            }
         }
         
-        function loadSpecificPost(postId) { const postToLoad = getPosts().find(p => p.id === postId); if (postToLoad) { currentPostId = postId; populateForm(postToLoad); closeModal(loadPostsModal); showToast(`Loaded post: ${postToLoad.name}`, 'success'); } }
-        function deletePost(postId, postName) { showConfirmation(`Are you sure you want to delete "${postName}"? This cannot be undone.`, () => { let posts = getPosts(); const updatedPosts = posts.filter(p => p.id !== postId); savePosts(updatedPosts); if (currentPostId === postId) { clearForm(); } openLoadModal(); showToast(`Post "${postName}" deleted.`, 'success'); }); }
+        function openLoadModal(e) {
+            const searchTerm = postSearchInput.value.toLowerCase();
+            const posts = getPosts();
+            savedPostsList.innerHTML = '';
+
+            const filteredPosts = posts.filter(post => post.name.toLowerCase().includes(searchTerm));
+
+            if (filteredPosts.length === 0) {
+                savedPostsList.innerHTML = `<p class="text-secondary">No ${searchTerm ? 'matching' : 'saved'} posts found.</p>`;
+                if (!e || e.type !== 'input') openModal(loadPostsModal);
+                return;
+            }
+
+            filteredPosts.sort((a, b) => new Date(b.savedAt) - new Date(a.savedAt));
+            filteredPosts.forEach(post => {
+                const postElement = document.createElement('div');
+                postElement.className = 'p-2 border border-border-color rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 flex justify-between items-center';
+                const textContainer = document.createElement('div');
+                textContainer.className = "flex-grow cursor-pointer";
+                textContainer.innerHTML = `<span class="text-primary">${post.name}</span> <span class="text-xs text-secondary ml-2">${new Date(post.savedAt).toLocaleDateString()}</span>`;
+                textContainer.onclick = () => loadSpecificPost(post.id);
+                const deleteBtn = document.createElement('button');
+                deleteBtn.innerHTML = '&#x1F5D1;';
+                deleteBtn.className = 'ml-4 p-1 text-red-500 hover:text-red-700';
+                deleteBtn.setAttribute('aria-label', `Delete post titled ${post.name}`);
+                deleteBtn.onclick = (evt) => { evt.stopPropagation(); deletePost(post.id, post.name); };
+                postElement.appendChild(textContainer);
+                postElement.appendChild(deleteBtn);
+                savedPostsList.appendChild(postElement);
+            });
+            if (!e || e.type !== 'input') openModal(loadPostsModal);
+        }
+        
+        function loadSpecificPost(postId) {
+            showConfirmation("Loading this post will overwrite your current unsaved changes. Continue?", () => {
+                const postToLoad = getPosts().find(p => p.id === postId);
+                if (postToLoad) {
+                    populateForm(postToLoad);
+                    closeModal(loadPostsModal);
+                    showToast(`Loaded post: ${postToLoad.name}`, 'success');
+                }
+            });
+        }
+        function deletePost(postId, postName) {
+            showConfirmation(`Are you sure you want to delete "${postName}"? This cannot be undone.`, () => {
+                savePosts(getPosts().filter(p => p.id !== postId));
+                if (currentPostId === postId) {
+                    clearForm();
+                }
+                openLoadModal();
+                showToast(`Post "${postName}" deleted.`, 'success');
+            });
+        }
 
         // --- Utility Functions ---
-        function copyToClipboard() { const textToCopy = generatePostText(); const textArea = document.createElement('textarea'); textArea.value = textToCopy; document.body.appendChild(textArea); textArea.select(); try { document.execCommand('copy'); showToast('Copied to clipboard!', 'success'); } catch (err) { showToast('Copy failed.', 'error'); } document.body.removeChild(textArea); }
-        function clearForm() { Object.values(fields).forEach(el => el.value = ''); Object.values(containers).forEach(c => c.innerHTML = ''); currentPostId = null; currentPostName = 'New Post'; updateUIForState(); updatePreview(); }
+        function copyToClipboard() {
+            const textToCopy = generatePostText();
+            const textArea = document.createElement('textarea');
+            textArea.value = textToCopy;
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                copyButtonText.textContent = '✔ Copied!';
+                setTimeout(() => {
+                    copyButtonText.textContent = 'Copy to Clipboard';
+                }, 2000);
+            } catch (err) {
+                showToast('Copy failed.', 'error');
+            }
+            document.body.removeChild(textArea);
+        }
+        
+        function clearForm() {
+            Object.values(fields).forEach(el => el.value = '');
+            Object.values(containers).forEach(c => {
+                c.innerHTML = '';
+                addEmptyStateMessage(c);
+            });
+            currentPostId = null;
+            currentPostName = 'New Post';
+            clearAutosave();
+            updateUIForState();
+            updatePreview();
+        }
+        
+        function confirmAndClearForm() {
+            const hasUnsavedChanges = localStorage.getItem(AUTOSAVE_KEY);
+            if (hasUnsavedChanges) {
+                showConfirmation("Are you sure you want to start a new post? All unsaved changes will be lost.", () => clearForm());
+            } else {
+                clearForm();
+            }
+        }
+
         function getFormData() {
-            const data = { name: currentPostName };
+            const data = { name: currentPostName, id: currentPostId };
             for (const key in fields) { data[key] = fields[key].value; }
             data.individuals = Array.from(containers.individuals.querySelectorAll('.dynamic-item')).map(item => ({ name: item.querySelector('.individual-name').value, dob: item.querySelector('.individual-dob').value, phone: item.querySelector('.individual-phone').value, email: item.querySelector('.individual-email').value, address: item.querySelector('.individual-address').value, fbLink: item.querySelector('.individual-fb-link').value, igLink: item.querySelector('.individual-ig-link').value, xLink: item.querySelector('.individual-x-link').value, otherLinks: item.querySelector('.individual-other-links').value, }));
             data.aliases = Array.from(containers.aliases.querySelectorAll('.dynamic-item')).map(item => ({ name: item.querySelector('.alias-name').value }));
@@ -636,37 +743,179 @@
             data.articles = Array.from(containers.articles.querySelectorAll('.dynamic-item')).map(item => ({ title: item.querySelector('.article-title').value, url: item.querySelector('.article-url').value }));
             return data;
         }
+
         function populateForm(data) {
-            clearForm();
+            Object.values(fields).forEach(el => el.value = '');
+            Object.values(containers).forEach(c => c.innerHTML = '');
             for (const key in fields) { if (data[key]) fields[key].value = data[key]; }
-            data.individuals?.forEach(ind => { addDynamicItem('individual'); const item = containers.individuals.lastElementChild; item.querySelector('.individual-name').value = ind.name || ''; item.querySelector('.individual-dob').value = ind.dob || ''; item.querySelector('.individual-phone').value = ind.phone || ''; item.querySelector('.individual-email').value = ind.email || ''; item.querySelector('.individual-address').value = ind.address || ''; item.querySelector('.individual-fb-link').value = ind.fbLink || ''; item.querySelector('.individual-ig-link').value = ind.igLink || ''; item.querySelector('.individual-x-link').value = ind.xLink || ''; item.querySelector('.individual-other-links').value = ind.otherLinks || ''; });
-            data.aliases?.forEach(alias => { addDynamicItem('alias'); containers.aliases.lastElementChild.querySelector('.alias-name').value = alias.name; });
-            data.organizations?.forEach(org => { addDynamicItem('organization'); const item = containers.organizations.lastElementChild; item.querySelector('.org-name').value = org.name || ''; item.querySelector('.org-ein').value = org.ein || ''; item.querySelector('.org-license').value = org.license || ''; item.querySelector('.org-record-link').value = org.recordLink || ''; item.querySelector('.org-status').value = org.status || ''; item.querySelector('.org-fb-link').value = org.fbLink || ''; item.querySelector('.org-ig-link').value = org.igLink || ''; item.querySelector('.org-x-link').value = org.xLink || ''; item.querySelector('.org-website-link').value = org.websiteLink || ''; item.querySelector('.org-other-links').value = org.otherLinks || ''; });
-            data.legalRegistrations?.forEach(reg => { addDynamicItem('legalRegistration'); const item = containers.legalRegistrations.lastElementChild; item.querySelector('.legal-registration-title').value = reg.title; item.querySelector('.legal-registration-url').value = reg.url; });
-            data.fraudulentSolicitations?.forEach(sol => { addDynamicItem('fraudulentSolicitation'); containers.fraudulentSolicitations.lastElementChild.querySelector('.fraudulent-solicitation-text').value = sol.text; });
-            data.warningsAndAccounts?.forEach(warn => { addDynamicItem('warningAndAccount'); containers.warningsAndAccounts.lastElementChild.querySelector('.warning-account-text').value = warn.text; });
-            data.investigations?.forEach(inv => { addDynamicItem('investigation'); const item = containers.investigations.lastElementChild; item.querySelector('.investigation-title').value = inv.title; item.querySelector('.investigation-url').value = inv.url; });
-            data.evidence?.forEach(ev => { addDynamicItem('evidence'); const item = containers.evidence.lastElementChild; item.querySelector('.evidence-title').value = ev.title || ''; item.querySelector('.evidence-description').value = ev.description || ''; item.querySelector('.evidence-url').value = ev.url || ''; item.querySelector('.evidence-date').value = ev.date || ''; });
-            data.articles?.forEach(art => { addDynamicItem('article'); const item = containers.articles.lastElementChild; item.querySelector('.article-title').value = art.title; item.querySelector('.article-url').value = art.url; });
+            data.individuals?.forEach(d => { const item = addDynamicItem('individual', { suppressSideEffects: true }); if(item){ item.querySelector('.individual-name').value = d.name || ''; item.querySelector('.individual-dob').value = d.dob || ''; item.querySelector('.individual-phone').value = d.phone || ''; item.querySelector('.individual-email').value = d.email || ''; item.querySelector('.individual-address').value = d.address || ''; item.querySelector('.individual-fb-link').value = d.fbLink || ''; item.querySelector('.individual-ig-link').value = d.igLink || ''; item.querySelector('.individual-x-link').value = d.xLink || ''; item.querySelector('.individual-other-links').value = d.otherLinks || ''; }});
+            data.aliases?.forEach(d => { const item = addDynamicItem('alias', { suppressSideEffects: true }); if(item){ item.querySelector('.alias-name').value = d.name; }});
+            data.organizations?.forEach(d => { const item = addDynamicItem('organization', { suppressSideEffects: true }); if(item){ item.querySelector('.org-name').value = d.name || ''; item.querySelector('.org-ein').value = d.ein || ''; item.querySelector('.org-license').value = d.license || ''; item.querySelector('.org-record-link').value = d.recordLink || ''; item.querySelector('.org-status').value = d.status || ''; item.querySelector('.org-fb-link').value = d.fbLink || ''; item.querySelector('.org-ig-link').value = d.igLink || ''; item.querySelector('.org-x-link').value = d.xLink || ''; item.querySelector('.org-website-link').value = d.websiteLink || ''; item.querySelector('.org-other-links').value = d.otherLinks || ''; }});
+            data.legalRegistrations?.forEach(d => { const item = addDynamicItem('legalRegistration', { suppressSideEffects: true }); if(item){ item.querySelector('.legal-registration-title').value = d.title; item.querySelector('.legal-registration-url').value = d.url; }});
+            data.fraudulentSolicitations?.forEach(d => { const item = addDynamicItem('fraudulentSolicitation', { suppressSideEffects: true }); if(item){ item.querySelector('.fraudulent-solicitation-text').value = d.text; }});
+            data.warningsAndAccounts?.forEach(d => { const item = addDynamicItem('warningAndAccount', { suppressSideEffects: true }); if(item){ item.querySelector('.warning-account-text').value = d.text; }});
+            data.investigations?.forEach(d => { const item = addDynamicItem('investigation', { suppressSideEffects: true }); if(item){ item.querySelector('.investigation-title').value = d.title; item.querySelector('.investigation-url').value = d.url; }});
+            data.evidence?.forEach(d => { const item = addDynamicItem('evidence', { suppressSideEffects: true }); if(item){ item.querySelector('.evidence-title').value = d.title || ''; item.querySelector('.evidence-description').value = d.description || ''; item.querySelector('.evidence-url').value = d.url || ''; item.querySelector('.evidence-date').value = d.date || ''; }});
+            data.articles?.forEach(d => { const item = addDynamicItem('article', { suppressSideEffects: true }); if(item){ item.querySelector('.article-title').value = d.title; item.querySelector('.article-url').value = d.url; }});
+            currentPostId = data.id;
             currentPostName = data.name;
-            updateUIForState();
+            Object.values(containers).forEach(updateItemControls);
+            clearAutosave();
             updatePreview();
+            updateUIForState();
+        }
+
+        // --- UI/UX Enhancement Functions ---
+        function toggleTheme() {
+            const isDark = themeToggle.checked;
+            document.documentElement.classList.toggle('dark', isDark);
+            localStorage.setItem(THEME_KEY, isDark ? 'dark' : 'light');
+        }
+
+        function updateItemControls(container) {
+            if (!container) return;
+            const items = container.querySelectorAll('.dynamic-item');
+            const emptyState = container.querySelector('.empty-state');
+
+            if (items.length === 0) {
+                if (emptyState) emptyState.style.display = 'block';
+                return;
+            }
+
+            if (emptyState) emptyState.style.display = 'none';
+
+            items.forEach((item, index) => {
+                const upBtn = item.querySelector('.up-btn');
+                const downBtn = item.querySelector('.down-btn');
+                if (upBtn) upBtn.disabled = (index === 0);
+                if (downBtn) downBtn.disabled = (index === items.length - 1);
+            });
+        }
+
+        function addEmptyStateMessage(container) {
+            if (!container.querySelector('.empty-state')) {
+                const p = document.createElement('p');
+                p.className = 'empty-state';
+                p.textContent = 'No items added yet.';
+                container.appendChild(p);
+            }
+        }
+
+        function startAutosave() {
+            clearInterval(autosaveInterval);
+            editingStatus.textContent = 'Unsaved changes...';
+            autosaveInterval = setInterval(() => {
+                const data = getFormData();
+                localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(data));
+                editingStatus.textContent = `Draft saved at ${new Date().toLocaleTimeString()}`;
+            }, 10000);
+        }
+
+        function clearAutosave() {
+            clearInterval(autosaveInterval);
+            localStorage.removeItem(AUTOSAVE_KEY);
+        }
+
+        function loadAutosavedDraft() {
+            const draft = localStorage.getItem(AUTOSAVE_KEY);
+            if (draft) {
+                showConfirmation(
+                    "We found an unsaved draft. Would you like to restore it?",
+                    () => { // onConfirm
+                        const data = JSON.parse(draft);
+                        populateForm(data);
+                        showToast("Draft restored.", 'info');
+                    },
+                    () => { // onCancel
+                        clearForm();
+                    }
+                );
+            } else {
+                clearForm();
+            }
+        }
+
+        function exportPosts() {
+            const posts = getPosts();
+            if (posts.length === 0) { showToast("No posts to export.", 'error'); return; }
+            const dataStr = JSON.stringify(posts, null, 2);
+            const dataBlob = new Blob([dataStr], {type: "application/json"});
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.download = `blacklist_posts_backup_${new Date().toISOString().split('T')[0]}.json`;
+            link.href = url;
+            link.click();
+            URL.revokeObjectURL(url);
+            showToast("Posts exported successfully.", 'success');
+        }
+
+        function handleImport(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const importedPosts = JSON.parse(e.target.result);
+                    if (!Array.isArray(importedPosts)) throw new Error("Invalid format");
+                    
+                    showConfirmation(`Found ${importedPosts.length} posts. Do you want to merge these by adding new posts from the file?`, () => {
+                        const existingPosts = getPosts();
+                        const existingIds = new Set(existingPosts.map(p => p.id));
+                        let addedCount = 0;
+                        importedPosts.forEach(p => {
+                            if (p && p.id && !existingIds.has(p.id)) {
+                                existingPosts.push(p);
+                                addedCount++;
+                            }
+                        });
+                        savePosts(existingPosts);
+                        showToast(`${addedCount} new posts imported successfully!`, 'success');
+                        openLoadModal();
+                    });
+                } catch (err) {
+                    showToast("Import failed. Invalid file format.", 'error');
+                } finally {
+                    importFileInput.value = '';
+                }
+            };
+            reader.readAsText(file);
         }
 
         // --- Toast & Modal Helpers ---
         function showToast(message, type = 'success') { const toastContainer = document.getElementById('toast-container'); const toast = document.createElement('div'); toast.className = `toast ${type}`; toast.textContent = message; toastContainer.appendChild(toast); setTimeout(() => { toast.classList.add('show'); }, 10); setTimeout(() => { toast.classList.remove('show'); toast.addEventListener('transitionend', () => toast.remove()); }, 4000); }
-        function showConfirmation(message, onConfirm) { document.getElementById('confirmModalText').textContent = message; openModal(confirmModal); document.getElementById('confirmOkBtn').onclick = () => { closeModal(confirmModal); onConfirm(); }; }
-        function openModal(modalElement) { modalElement.style.display = 'flex'; appContainer.setAttribute('aria-hidden', 'true'); const focusableElements = modalElement.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'); if (focusableElements.length) focusableElements[0].focus(); }
-        function closeModal(modalElement) { modalElement.style.display = 'none'; appContainer.removeAttribute('aria-hidden'); }
+        
+        function showConfirmation(message, onConfirm, onCancel) {
+            document.getElementById('confirmModalText').textContent = message;
+            _confirmCallbacks = { onConfirm, onCancel };
+            openModal(confirmModal);
+        }
+
+        function openModal(modalElement) {
+            modalElement.style.display = 'flex';
+            appContainer.setAttribute('aria-hidden', 'true');
+            const focusableElement = modalElement.querySelector('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+            if (focusableElement) focusableElement.focus();
+        }
+
+        function closeModal(modalElement) {
+            modalElement.style.display = 'none';
+            appContainer.removeAttribute('aria-hidden');
+            if (modalElement === confirmModal) {
+                _confirmCallbacks = { onConfirm: null, onCancel: null };
+            }
+        }
         
         function updateUIForState() {
+            if (localStorage.getItem(AUTOSAVE_KEY)) return;
+
+            clearInterval(autosaveInterval);
             if (currentPostId) {
                 editingStatus.textContent = `Editing: ${currentPostName}`;
-                buttons.saveOrUpdate.textContent = 'Update Current';
+                buttons.saveOrUpdate.textContent = 'Update';
                 buttons.saveOrUpdate.classList.remove('bg-indigo-600', 'hover:bg-indigo-700');
                 buttons.saveOrUpdate.classList.add('bg-purple-600', 'hover:bg-purple-700');
             } else {
-                editingStatus.textContent = 'Editing: New Post';
+                editingStatus.textContent = '';
                 buttons.saveOrUpdate.textContent = 'Save New';
                 buttons.saveOrUpdate.classList.remove('bg-purple-600', 'hover:bg-purple-700');
                 buttons.saveOrUpdate.classList.add('bg-indigo-600', 'hover:bg-indigo-700');
@@ -674,9 +923,19 @@
         }
 
         // --- Initial Load ---
-        clearForm();
-        updateUIForState();
-        updatePreview();
+        function initialize() {
+            const savedTheme = localStorage.getItem(THEME_KEY);
+            if (savedTheme === 'dark') {
+                themeToggle.checked = true;
+                document.documentElement.classList.add('dark');
+            } else {
+                themeToggle.checked = false;
+                document.documentElement.classList.remove('dark');
+            }
+            loadAutosavedDraft();
+        }
+        
+        initialize();
     });
     </script>
 </body>
