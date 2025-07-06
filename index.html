@@ -165,12 +165,12 @@
                 <p class="text-lg text-secondary mt-2">Create, format, and manage social media alerts with autosave and AI.</p>
                 <div class="header-controls">
                     <div class="theme-switch-wrapper">
-                        <span class="text-sm font-medium text-secondary">☀️</span>
+                        <span class="text-sm font-medium text-secondary">â˜€ï¸ </span>
                         <label class="theme-switch" for="theme-toggle">
                             <input type="checkbox" id="theme-toggle" />
                             <span class="slider round"></span>
                         </label>
-                        <span class="text-sm font-medium text-secondary">🌙</span>
+                        <span class="text-sm font-medium text-secondary">ðŸŒ™</span>
                     </div>
                 </div>
             </header>
@@ -192,7 +192,7 @@
                     
                     <div class="form-section shadow-md">
                         <div class="form-section-header" role="button" aria-expanded="true" aria-controls="aiExtractorContent" tabindex="0">
-                            <h3><span aria-hidden="true" class="text-xl mr-2">🤖</span>AI Article Extractor</h3>
+                            <h3><span aria-hidden="true" class="text-xl mr-2">ðŸ¤–</span>AI Article Extractor</h3>
                             <svg class="chevron-icon w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                         </div>
                         <div class="form-section-content" id="aiExtractorContent">
@@ -200,8 +200,8 @@
                             <div class="flex gap-2">
                                 <input type="url" id="articleUrlInput" placeholder="https://www.news.com/article..." class="w-full p-2 border rounded-md">
                                 <button id="fetchArticleBtn" class="ai-btn action-btn bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg shadow">
-                                    <span class="btn-text">✨ Fetch & Fill</span>
-                                    <span class="spinner">🌀</span>
+                                    <span class="btn-text">âœ¨ Fetch & Fill</span>
+                                    <span class="spinner">ðŸŒ€</span>
                                 </button>
                             </div>
                         </div>
@@ -246,8 +246,8 @@
                                 </div>
                             </div>
                             <button id="aiReviewBtn" class="ai-review-btn w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-4 rounded-lg text-lg shadow-md action-btn">
-                                <span class="btn-text">🤖 AI Review</span>
-                                <span class="spinner">🌀</span>
+                                <span class="btn-text">ðŸ¤– AI Review</span>
+                                <span class="spinner">ðŸŒ€</span>
                             </button>
                         </div>
                     </div>
@@ -263,10 +263,10 @@
     <div id="confirmModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="confirmModalTitle"><div class="modal-content"><h2 id="confirmModalTitle" class="text-xl font-bold mb-4 text-headings">Confirm Action</h2><p id="confirmModalText" class="mb-6 text-primary">Are you sure?</p><div class="flex justify-end space-x-4"><button id="confirmCancelBtn" class="action-btn px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-md">Cancel</button><button id="confirmOkBtn" class="action-btn px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md">Confirm</button></div></div></div>
     <div id="categoryManagerModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="categoryManagerModalTitle"><div class="modal-content"><button class="close-button" id="closeCategoryManagerModal" aria-label="Close modal">&times;</button><h2 id="categoryManagerModalTitle" class="text-2xl font-bold mb-4 text-headings">Manage Categories</h2><div id="categoryList" class="space-y-2 max-h-80 overflow-y-auto"></div><div class="mt-6 pt-4 border-t border-border-color flex flex-col gap-2"><button id="addNewCategoryBtn" class="action-btn w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg">Add New Category</button><button id="saveCategoryChangesBtn" class="action-btn w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">Save and Close</button></div></div></div>
     <div id="selectiveExportModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="selectiveExportModalTitle"><div class="modal-content"><button class="close-button" id="closeSelectiveExportModal" aria-label="Close modal">&times;</button><h2 id="selectiveExportModalTitle" class="text-2xl font-bold mb-4 text-headings">Selective Export</h2><p class="text-secondary mb-4">Choose which categories to include in the export.</p><div id="selectiveExportCategoryList" class="space-y-2"></div><div class="mt-6 pt-4 border-t border-border-color flex gap-2"><button id="performSelectiveExportBtn" class="action-btn w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">Export Selected</button></div></div></div>
-    <div id="aiReviewModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="aiReviewModalTitle"><div class="modal-content"><button class="close-button" id="closeAiReviewModal" aria-label="Close modal">&times;</button><h2 id="aiReviewModalTitle" class="text-2xl font-bold mb-4 text-headings">🤖 AI Sanity Check</h2><div id="aiReviewResult" class="text-primary space-y-4"><p class="text-secondary">AI is reviewing your post...</p></div></div></div>
+    <div id="aiReviewModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="aiReviewModalTitle"><div class="modal-content"><button class="close-button" id="closeAiReviewModal" aria-label="Close modal">&times;</button><h2 id="aiReviewModalTitle" class="text-2xl font-bold mb-4 text-headings">ðŸ¤– AI Sanity Check</h2><div id="aiReviewResult" class="text-primary space-y-4"><p class="text-secondary">AI is reviewing your post...</p></div></div></div>
     
     <script>
-    document.addEventListener('DOMContentLoaded', () => {
+    (function() { // Wrap in IIFE to avoid polluting global scope
         // --- App State ---
         let currentPostId = null;
         let currentPostName = 'New Post';
@@ -483,16 +483,17 @@
 
         // --- Dynamic Item Management ---
         const itemTemplates = {
-            individual: (id) => `<div class="flex gap-4"><img class="image-preview" id="img-preview-${id}" src="https://placehold.co/64x64/f8fafc/cbd5e1?text=🖼️" onerror="this.onerror=null;this.src='https://placehold.co/64x64/f8fafc/cbd5e1?text=❌';"><div class="flex-grow"><label for="individual-img-${id}" class="block text-sm font-medium text-secondary mb-1">Image URL</label><input type="url" id="individual-img-${id}" name="individual-image-url" class="w-full p-2 border rounded-md mb-2 individual-image-url" oninput="this.closest('.dynamic-item').querySelector('.image-preview').src=this.value || 'https://placehold.co/64x64/f8fafc/cbd5e1?text=🖼️'"></div></div><div><label for="individual-name-${id}" class="block text-sm font-medium text-secondary mb-1">Full Name</label><input type="text" id="individual-name-${id}" name="individual-name" class="w-full p-2 border rounded-md mb-2 individual-name"></div><div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-2"><div><label for="individual-dob-${id}" class="block text-sm font-medium text-secondary mb-1">Date of Birth</label><input type="text" id="individual-dob-${id}" name="individual-dob" class="w-full p-2 border rounded-md individual-dob"></div><div><label for="individual-phone-${id}" class="block text-sm font-medium text-secondary mb-1">Phone Number</label><input type="tel" id="individual-phone-${id}" name="individual-phone" class="w-full p-2 border rounded-md individual-phone"></div></div><div><label for="individual-email-${id}" class="block text-sm font-medium text-secondary mb-1">Email Address</label><input type="email" id="individual-email-${id}" name="individual-email" class="w-full p-2 border rounded-md mb-2 individual-email"></div><div><label for="individual-address-${id}" class="block text-sm font-medium text-secondary mb-1">Last Known Address</label><textarea id="individual-address-${id}" name="individual-address" rows="2" class="w-full p-2 border rounded-md mb-2 individual-address"></textarea></div><h4 class="font-semibold text-sm mt-3 mb-1 text-gray-600 dark:text-gray-400">Social Media Links</h4><div class="space-y-2"><input type="url" placeholder="Facebook URL" name="individual-fb-link" class="w-full p-2 border rounded-md individual-fb-link" aria-label="Individual Facebook URL"><input type="url" placeholder="Instagram URL" name="individual-ig-link" class="w-full p-2 border rounded-md individual-ig-link" aria-label="Individual Instagram URL"><input type="url" placeholder="X (Twitter) URL" name="individual-x-link" class="w-full p-2 border rounded-md individual-x-link" aria-label="Individual X (Twitter) URL"><input type="text" placeholder="Other URLs (comma-sep)" name="individual-other-links" class="w-full p-2 border rounded-md individual-other-links" aria-label="Individual Other URLs"></div>`,
+            individual: (id) => `<div class="flex gap-4"><img class="image-preview" id="img-preview-${id}" src="https://placehold.co/64x64/f8fafc/cbd5e1?text=ðŸ–¼ï¸ " onerror="this.onerror=null;this.src='https://placehold.co/64x64/f8fafc/cbd5e1?text=â Œ';"><div class="flex-grow"><label for="individual-img-${id}" class="block text-sm font-medium text-secondary mb-1">Image URL</label><input type="url" id="individual-img-${id}" name="individual-image-url" class="w-full p-2 border rounded-md mb-2 individual-image-url" oninput="this.closest('.dynamic-item').querySelector('.image-preview').src=this.value || 'https://placehold.co/64x64/f8fafc/cbd5e1?text=ðŸ–¼ï¸ '"></div></div><div><label for="individual-name-${id}" class="block text-sm font-medium text-secondary mb-1">Full Name</label><input type="text" id="individual-name-${id}" name="individual-name" class="w-full p-2 border rounded-md mb-2 individual-name"></div><div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-2"><div><label for="individual-dob-${id}" class="block text-sm font-medium text-secondary mb-1">Date of Birth</label><input type="text" id="individual-dob-${id}" name="individual-dob" class="w-full p-2 border rounded-md individual-dob"></div><div><label for="individual-phone-${id}" class="block text-sm font-medium text-secondary mb-1">Phone Number</label><input type="tel" id="individual-phone-${id}" name="individual-phone" class="w-full p-2 border rounded-md individual-phone"></div></div><div><label for="individual-email-${id}" class="block text-sm font-medium text-secondary mb-1">Email Address</label><input type="email" id="individual-email-${id}" name="individual-email" class="w-full p-2 border rounded-md mb-2 individual-email"></div><div><label for="individual-address-${id}" class="block text-sm font-medium text-secondary mb-1">Last Known Address</label><textarea id="individual-address-${id}" name="individual-address" rows="2" class="w-full p-2 border rounded-md mb-2 individual-address"></textarea></div><h4 class="font-semibold text-sm mt-3 mb-1 text-gray-600 dark:text-gray-400">Social Media Links</h4><div class="space-y-2"><input type="url" placeholder="Facebook URL" name="individual-fb-link" class="w-full p-2 border rounded-md individual-fb-link" aria-label="Individual Facebook URL"><input type="url" placeholder="Instagram URL" name="individual-ig-link" class="w-full p-2 border rounded-md individual-ig-link" aria-label="Individual Instagram URL"><input type="url" placeholder="X (Twitter) URL" name="individual-x-link" class="w-full p-2 border rounded-md individual-x-link" aria-label="Individual X (Twitter) URL"><input type="text" placeholder="Other URLs (comma-sep)" name="individual-other-links" class="w-full p-2 border rounded-md individual-other-links" aria-label="Individual Other URLs"></div>`,
             alias: (id) => `<div><label for="alias-name-${id}" class="block text-sm font-medium text-secondary mb-1">Alias Name</label><input type="text" id="alias-name-${id}" name="alias-name" class="w-full p-2 border rounded-md alias-name"></div>`,
             organization: (id) => `<div><label for="org-name-${id}" class="block text-sm font-medium text-secondary mb-1">Organization Name</label><input type="text" id="org-name-${id}" name="org-name" class="w-full p-2 border rounded-md mb-2 org-name"></div><div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-2"><div><label for="org-ein-${id}" class="block text-sm font-medium text-secondary mb-1">EIN</label><input type="text" id="org-ein-${id}" name="org-ein" class="w-full p-2 border rounded-md org-ein"></div><div><label for="org-license-${id}" class="block text-sm font-medium text-secondary mb-1">License #</label><input type="text" id="org-license-${id}" name="org-license" class="w-full p-2 border rounded-md org-license"></div></div><div><label for="org-record-${id}" class="block text-sm font-medium text-secondary mb-1">Official Record Link</label><input type="url" id="org-record-${id}" name="org-record-link" class="w-full p-2 border rounded-md mb-2 org-record-link"></div><div><label for="org-status-${id}" class="block text-sm font-medium text-secondary mb-1">Status</label><input type="text" id="org-status-${id}" name="org-status" placeholder="e.g., Active, CLOSED" class="w-full p-2 border rounded-md mb-2 org-status"></div><h4 class="font-semibold text-sm mt-3 mb-1 text-gray-600 dark:text-gray-400">Links</h4><div class="grid grid-cols-1 md:grid-cols-2 gap-2"><input type="url" placeholder="Facebook URL" name="org-fb-link" class="w-full p-2 border rounded-md org-fb-link" aria-label="Organization Facebook URL"><input type="url" placeholder="Instagram URL" name="org-ig-link" class="w-full p-2 border rounded-md org-ig-link" aria-label="Organization Instagram URL"><input type="url" placeholder="X (Twitter) URL" name="org-x-link" class="w-full p-2 border rounded-md org-x-link" aria-label="Organization X (Twitter) URL"><input type="url" placeholder="Website URL" name="org-website-link" class="w-full p-2 border rounded-md org-website-link" aria-label="Organization Website URL"></div><div class="mt-2"><input type="text" placeholder="Other URLs (comma-sep)" name="org-other-links" class="w-full p-2 border rounded-md org-other-links" aria-label="Organization Other URLs"></div>`,
             legalRegistration: (id) => `<div><label for="legal-title-${id}" class="block text-sm font-medium text-secondary mb-1">Document Title</label><input type="text" id="legal-title-${id}" name="legal-registration-title" class="w-full p-2 border rounded-md mb-2 legal-registration-title"></div><div><label for="legal-url-${id}" class="block text-sm font-medium text-secondary mb-1">URL</label><input type="url" id="legal-url-${id}" name="legal-registration-url" class="w-full p-2 border rounded-md mb-2 legal-registration-url"></div>`,
             fraudulentSolicitation: (id) => `<div><label for="fraud-text-${id}" class="block text-sm font-medium text-secondary mb-1">Allegation Details</label><textarea id="fraud-text-${id}" name="fraudulent-solicitation-text" rows="3" class="w-full p-2 border rounded-md fraudulent-solicitation-text"></textarea></div>`,
             warningAndAccount: (id) => `<div><label for="warning-text-${id}" class="block text-sm font-medium text-secondary mb-1">Account/Warning Details</label><textarea id="warning-text-${id}" name="warning-account-text" rows="3" class="w-full p-2 border rounded-md warning-account-text"></textarea></div>`,
             investigation: (id) => `<div><label for="inv-title-${id}" class="block text-sm font-medium text-secondary mb-1">Title</label><input type="text" id="inv-title-${id}" name="investigation-title" class="w-full p-2 border rounded-md mb-2 investigation-title"></div><div><label for="inv-url-${id}" class="block text-sm font-medium text-secondary mb-1">URL</label><input type="url" id="inv-url-${id}" name="investigation-url" class="w-full p-2 border rounded-md mb-2 investigation-url"></div>`,
-            evidence: (id) => `<div class="flex gap-4"><img class="image-preview" id="img-preview-${id}" src="https://placehold.co/64x64/f8fafc/cbd5e1?text=🖼️" onerror="this.onerror=null;this.src='https://placehold.co/64x64/f8fafc/cbd5e1?text=❌';"><div class="flex-grow"><label for="evidence-img-${id}" class="block text-sm font-medium text-secondary mb-1">Upload Image</label><input type="file" id="evidence-img-${id}" class="w-full p-1 border rounded-md mb-2 evidence-image-upload" accept="image/*" data-preview-id="img-preview-${id}"></div></div><div><label for="evidence-title-${id}" class="block text-sm font-medium text-secondary mb-1">Title</label><input type="text" id="evidence-title-${id}" name="evidence-title" class="w-full p-2 border rounded-md mb-2 evidence-title"></div><div><label for="evidence-desc-${id}" class="block text-sm font-medium text-secondary mb-1">Description</label><textarea id="evidence-desc-${id}" name="evidence-description" rows="3" class="w-full p-2 border rounded-md mb-2 evidence-description"></textarea></div><div class="grid grid-cols-1 md:grid-cols-2 gap-2"><div><label for="evidence-url-${id}" class="block text-sm font-medium text-secondary mb-1">Source URL</label><input type="url" id="evidence-url-${id}" name="evidence-url" class="w-full p-2 border rounded-md evidence-url"></div><div><label for="evidence-date-${id}" class="block text-sm font-medium text-secondary mb-1">Date (Optional)</label><input type="date" id="evidence-date-${id}" name="evidence-date" class="w-full p-2 border rounded-md evidence-date"></div></div><textarea id="evidence-img-data-${id}" name="evidence-image-data" class="hidden evidence-image-data"></textarea>`,
+            evidence: (id) => `<div class="flex gap-4"><img class="image-preview" id="img-preview-${id}" src="https://placehold.co/64x64/f8fafc/cbd5e1?text=ðŸ–¼ï¸ " onerror="this.onerror=null;this.src='https://placehold.co/64x64/f8fafc/cbd5e1?text=â Œ';"><div class="flex-grow"><label for="evidence-img-${id}" class="block text-sm font-medium text-secondary mb-1">Upload Image</label><input type="file" id="evidence-img-${id}" class="w-full p-1 border rounded-md mb-2 evidence-image-upload" accept="image/*" data-preview-id="img-preview-${id}"></div></div><div><label for="evidence-title-${id}" class="block text-sm font-medium text-secondary mb-1">Title</label><input type="text" id="evidence-title-${id}" name="evidence-title" class="w-full p-2 border rounded-md mb-2 evidence-title"></div><div><label for="evidence-desc-${id}" class="block text-sm font-medium text-secondary mb-1">Description</label><textarea id="evidence-desc-${id}" name="evidence-description" rows="3" class="w-full p-2 border rounded-md mb-2 evidence-description"></textarea></div><div class="grid grid-cols-1 md:grid-cols-2 gap-2"><div><label for="evidence-url-${id}" class="block text-sm font-medium text-secondary mb-1">Source URL</label><input type="url" id="evidence-url-${id}" name="evidence-url" class="w-full p-2 border rounded-md evidence-url"></div><div><label for="evidence-date-${id}" class="block text-sm font-medium text-secondary mb-1">Date (Optional)</label><input type="date" id="evidence-date-${id}" name="evidence-date" class="w-full p-2 border rounded-md evidence-date"></div></div><textarea id="evidence-img-data-${id}" name="evidence-image-data" class="hidden evidence-image-data"></textarea>`,
             article: (id) => `<div><label for="art-title-${id}" class="block text-sm font-medium text-secondary mb-1">Title</label><input type="text" id="art-title-${id}" name="article-title" class="w-full p-2 border rounded-md mb-2 article-title"></div><div><label for="art-url-${id}" class="block text-sm font-medium text-secondary mb-1">URL</label><input type="url" id="art-url-${id}" name="article-url" class="w-full p-2 border rounded-md mb-2 article-url"></div>`,
-            timelineEvent: (id) => `<div><label for="timeline-date-${id}" class="block text-sm font-medium text-secondary mb-1">Date</label><input type="date" id="timeline-date-${id}" name="timeline-date" class="w-full p-2 border rounded-md timeline-date"></div><div><label for="timeline-desc-${id}" class="block text-sm font-medium text-secondary mb-1">Description</label><input type="text" id="timeline-desc-${id}" name="timeline-description" placeholder="e.g., Court Hearing" class="w-full p-2 border rounded-md timeline-description"></div>`
+            timelineEvent: (id) => `<div><label for="timeline-date-${id}" class="block text-sm font-medium text-secondary mb-1">Date</label><input type="date" id="timeline-date-${id}" name="timeline-date" class="w-full p-2 border rounded-md timeline-date"></div><div><label for="timeline-desc-${id}" class="block text-sm font-medium text-secondary mb-1">Description</label><input type="text" id="timeline-desc-${id}" name="timeline-description" placeholder="e.g., Court Hearing" class="w-full p-2 border rounded-md timeline-description"></div>`,
+            generic: (id) => `<div><label for="generic-text-${id}" class="block text-sm font-medium text-secondary mb-1">Content</label><textarea id="generic-text-${id}" name="generic-text" rows="3" class="w-full p-2 border rounded-md generic-text"></textarea></div>`
         };
 
         function addDynamicItem(container, itemType, options = {}) {
@@ -502,7 +503,7 @@
             const uniqueId = `${itemType}-${Date.now()}`;
             const div = document.createElement('div');
             div.className = 'dynamic-item';
-            div.innerHTML = `<div class="item-controls"><button class="control-btn up-btn" aria-label="Move item up">▲</button><button class="control-btn down-btn" aria-label="Move item down">▼</button><button class="control-btn remove-btn" aria-label="Remove item">X</button></div>${itemTemplates[itemType](uniqueId)}`;
+            div.innerHTML = `<div class="item-controls"><button class="control-btn up-btn" aria-label="Move item up">â–²</button><button class="control-btn down-btn" aria-label="Move item down">â–¼</button><button class="control-btn remove-btn" aria-label="Remove item">X</button></div>${itemTemplates[itemType](uniqueId)}`;
             
             const emptyState = container.querySelector('.empty-state');
             if (emptyState) emptyState.style.display = 'none';
@@ -521,7 +522,7 @@
         function updatePreview(options = {}) {
             const { includedCategories = null } = options;
             const markdownText = generatePostText({ includedCategories });
-            const textForClipboard = markdownText.replace(/\[IMAGE_PREVIEW:(.*?),(.*?)\]/g, '[IMAGE: $2]').replace(/\[REDACTED\]/g, '…');
+            const textForClipboard = markdownText.replace(/\[IMAGE_PREVIEW:(.*?),(.*?)\]/g, '[IMAGE: $2]').replace(/\[REDACTED\]/g, 'â€¦');
             
             preview.innerHTML = renderMarkdown(markdownText);
             
@@ -582,7 +583,7 @@
                             });
                          } else {
                             items.forEach((item, index) => {
-                                const inputs = item.querySelectorAll('input, textarea');
+                                const inputs = item.querySelectorAll('input[name], textarea[name]');
                                 let itemText = '';
                                 inputs.forEach(input => {
                                     if(input.value && input.type !== 'file' && input.name) itemText += `${input.value}\n`;
@@ -604,7 +605,7 @@
         }
 
         function renderMarkdown(text) {
-            const placeholderUrl = 'https://placehold.co/64x64/f8fafc/cbd5e1?text=❌';
+            const placeholderUrl = 'https://placehold.co/64x64/f8fafc/cbd5e1?text=â Œ';
             return text
                 .replace(/\[IMAGE_PREVIEW:(.*?),(.*?)\]/g, (match, p1, p2) => {
                     const src = p1.startsWith('data:image') ? p1 : p1;
@@ -690,9 +691,9 @@
                             <span class="text-xs text-secondary ml-2">Saved: ${new Date(post.savedAt).toLocaleDateString()}</span>
                         </div>
                         <div class="modal-list-item-controls">
-                            <button class="modal-control-btn" data-history-id="${post.id}" title="View History">🕒</button>
-                            <button class="modal-control-btn" data-export-id="${post.id}" title="Export Post">📤</button>
-                            <button class="modal-control-btn text-red-500" data-delete-id="${post.id}" data-delete-name="${post.name}" title="Delete Post">🗑️</button>
+                            <button class="modal-control-btn" data-history-id="${post.id}" title="View History">ðŸ•’</button>
+                            <button class="modal-control-btn" data-export-id="${post.id}" title="Export Post">ðŸ“¤</button>
+                            <button class="modal-control-btn text-red-500" data-delete-id="${post.id}" data-delete-name="${post.name}" title="Delete Post">ðŸ—‘ï¸ </button>
                         </div>`;
                     lists.savedPosts.appendChild(postElement);
                 });
@@ -745,14 +746,14 @@
         // --- Utility Functions ---
         function copyToClipboard() {
             const markdownText = generatePostText({ forExport: true });
-            const textToCopy = markdownText.replace(/\[IMAGE_PREVIEW:(.*?),(.*?)\]/g, '[IMAGE: $2]').replace(/\[REDACTED\]/g, '…');
+            const textToCopy = markdownText.replace(/\[IMAGE_PREVIEW:(.*?),(.*?)\]/g, '[IMAGE: $2]').replace(/\[REDACTED\]/g, 'â€¦');
             const textArea = document.createElement('textarea');
             textArea.value = textToCopy;
             document.body.appendChild(textArea);
             textArea.select();
             try {
                 document.execCommand('copy');
-                copyButtonText.textContent = '✔ Copied!';
+                copyButtonText.textContent = 'âœ” Copied!';
                 setTimeout(() => { copyButtonText.textContent = 'Copy to Clipboard'; }, 2000);
             } catch (err) { showToast('Copy failed.', 'error'); }
             document.body.removeChild(textArea);
@@ -1007,7 +1008,7 @@
                 templates.forEach(template => {
                     const el = document.createElement('div');
                     el.className = 'modal-list-item';
-                    el.innerHTML = `<div class="modal-list-item-text" data-template-id="${template.id}">${template.name}</div><div class="modal-list-item-controls"><button class="modal-control-btn text-red-500" data-delete-id="${template.id}" data-delete-name="${template.name}" title="Delete Template">🗑️</button></div>`;
+                    el.innerHTML = `<div class="modal-list-item-text" data-template-id="${template.id}">${template.name}</div><div class="modal-list-item-controls"><button class="modal-control-btn text-red-500" data-delete-id="${template.id}" data-delete-name="${template.name}" title="Delete Template">ðŸ—‘ï¸ </button></div>`;
                     lists.templates.appendChild(el);
                 });
             }
@@ -1125,6 +1126,7 @@
                     localStorage.setItem(API_KEY_LS_KEY, userKey);
                     return true;
                 }
+                showToast("Gemini API Key is required for AI features.", "error");
                 return false;
             }
             return true;
@@ -1163,6 +1165,8 @@
                     case 'persuasive':
                         prompt = `Rewrite the following text to be more persuasive and compelling, encouraging action or awareness:\n\n${content}`;
                         break;
+                    default:
+                        throw new Error(`Unknown AI assist type: ${type}`);
                 }
 
                 const result = await callGeminiAPI(prompt);
@@ -1181,7 +1185,7 @@
 
         async function callGeminiAPI(prompt, jsonSchema = null) {
             const apiKey = getApiKey();
-            if (!apiKey) {
+            if (!apiKey || apiKey.includes("PLACEHOLDER")) {
                 throw new Error("API Key not set. Please set it for local development.");
             }
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
@@ -1214,7 +1218,7 @@
             if (result.candidates && result.candidates.length > 0 && result.candidates[0].content?.parts?.length > 0) {
                 return result.candidates[0].content.parts[0].text.trim();
             } else {
-                if (result.promptFeedback?.blockReason) {
+                 if (result.promptFeedback?.blockReason) {
                     throw new Error(`AI request blocked for: ${result.promptFeedback.blockReason}. Please revise your text.`);
                 }
                 throw new Error('AI returned an invalid response.');
@@ -1235,18 +1239,18 @@
         }
 
         function exportAsTxt(includedCategories = null) {
-            const text = generatePostText({ includedCategories, forExport: true }).replace(/\[REDACTED\]/g, '…');
+            const text = generatePostText({ includedCategories, forExport: true }).replace(/\[REDACTED\]/g, 'â€¦');
             downloadFile(`${currentPostName || 'post'}.txt`, text, 'text/plain;charset=utf-8;');
         }
 
         function exportAsMd(includedCategories = null) {
-            const text = generatePostText({ includedCategories, forExport: true }).replace(/\[REDACTED\]/g, '…');
+            const text = generatePostText({ includedCategories, forExport: true }).replace(/\[REDACTED\]/g, 'â€¦');
             downloadFile(`${currentPostName || 'post'}.md`, text, 'text/markdown;charset=utf-8;');
         }
 
         function exportAsPdf(includedCategories = null) {
             const tempPreview = document.createElement('div');
-            tempPreview.innerHTML = renderMarkdown(generatePostText({ includedCategories, forExport: true }).replace(/\[REDACTED\]/g, '…'));
+            tempPreview.innerHTML = renderMarkdown(generatePostText({ includedCategories, forExport: true }).replace(/\[REDACTED\]/g, 'â€¦'));
             
             showToast("Generating PDF...", "info");
 
@@ -1329,44 +1333,50 @@
         }
         
         function updateUIForState() {
-            if (localStorage.getItem(AUTOSAVE_KEY)) return;
+            if (localStorage.getItem(AUTOSAVE_KEY)) {
+                 editingStatus.textContent = `Draft saved at ${new Date(JSON.parse(localStorage.getItem(AUTOSAVE_KEY))?.savedAt || Date.now()).toLocaleTimeString()}`;
+                 document.getElementById('saveOrUpdate').textContent = 'Save Draft'; // Indicate it's saving the draft
+                 document.getElementById('saveOrUpdate').classList.remove('bg-indigo-600', 'hover:bg-indigo-700', 'bg-purple-600', 'hover:bg-purple-700');
+                 document.getElementById('saveOrUpdate').classList.add('bg-yellow-600', 'hover:bg-yellow-700');
+                 return;
+            }
 
             clearInterval(autosaveInterval);
             if (currentPostId) {
                 const subjectName = document.getElementById('subjectName')?.value;
                 editingStatus.textContent = `Editing: ${currentPostName || subjectName || 'Untitled'}`;
                 document.getElementById('saveOrUpdate').textContent = 'Update';
-                document.getElementById('saveOrUpdate').classList.remove('bg-indigo-600', 'hover:bg-indigo-700');
+                document.getElementById('saveOrUpdate').classList.remove('bg-indigo-600', 'hover:bg-indigo-700', 'bg-yellow-600', 'hover:bg-yellow-700');
                 document.getElementById('saveOrUpdate').classList.add('bg-purple-600', 'hover:bg-purple-700');
             } else {
                 editingStatus.textContent = '';
                 document.getElementById('saveOrUpdate').textContent = 'Save';
-                document.getElementById('saveOrUpdate').classList.remove('bg-purple-600', 'hover:bg-purple-700');
+                document.getElementById('saveOrUpdate').classList.remove('bg-purple-600', 'hover:bg-purple-700', 'bg-yellow-600', 'hover:bg-yellow-700');
                 document.getElementById('saveOrUpdate').classList.add('bg-indigo-600', 'hover:bg-indigo-700');
             }
         }
 
         // --- Category Management ---
         const defaultCategories = [
-            { id: 'mainInfo', title: 'Main Information', emoji: '⚖️', type: 'fields', fields: [
+            { id: 'mainInfo', title: 'Main Information', emoji: 'âš–ï¸ ', type: 'fields', fields: [
                 { id: 'subjectName', label: "Subject's Full Name", type: 'text' },
                 { id: 'caseType', label: "Case Type", type: 'text', placeholder: "e.g., Animal Cruelty Case" },
                 { id: 'location', label: "Location", type: 'text', placeholder: "e.g., Puerto Rico" },
                 { id: 'updateDate', label: "Date of Update", type: 'date' },
-                { id: 'caseUpdate', label: "Key Updates & Orders", type: 'textarea', rows: 4, placeholder: "Use '▪︎' for bullet points", aiAction: 'rewrite' },
+                { id: 'caseUpdate', label: "Key Updates & Orders", type: 'textarea', rows: 4, placeholder: "Use 'â–ªï¸Ž' for bullet points", aiAction: 'rewrite' },
                 { id: 'trialDate', label: "Trial / Hearing Date", type: 'text' },
             ]},
-            { id: 'timeline', title: 'Timeline of Events', emoji: '🗓️', type: 'dynamic', itemType: 'timelineEvent' },
-            { id: 'individuals', title: 'Blacklisted Individuals', emoji: '👤', type: 'dynamic', itemType: 'individual' },
-            { id: 'aliases', title: 'Aliases', emoji: '🎭', type: 'dynamic', itemType: 'alias' },
-            { id: 'organizations', title: 'Associated Organizations', emoji: '🏢', type: 'dynamic', itemType: 'organization' },
-            { id: 'legalReg', title: 'Legal Registration', emoji: '⚖️', type: 'dynamic', itemType: 'legalRegistration' },
-            { id: 'fraudAllegations', title: 'Allegations of Fraudulent Solicitations', emoji: '💰', type: 'dynamic', itemType: 'fraudulentSolicitation' },
-            { id: 'warnings', title: 'Warnings and First-Hand Accounts', emoji: '⚠️', type: 'dynamic', itemType: 'warningAndAccount' },
-            { id: 'investigations', title: 'Animal Cruelty Investigations', emoji: '🕵️', type: 'dynamic', itemType: 'investigation' },
-            { id: 'evidence', title: 'Enhanced Documentation & Evidence', emoji: '📂', type: 'dynamic', itemType: 'evidence' },
-            { id: 'articles', title: 'News & Legal Documents', emoji: '📰', type: 'dynamic', itemType: 'article' },
-            { id: 'summary', title: 'Summary & Extra Details', emoji: '📝', type: 'fields', fields: [
+            { id: 'timeline', title: 'Timeline of Events', emoji: 'ðŸ—“ï¸ ', type: 'dynamic', itemType: 'timelineEvent' },
+            { id: 'individuals', title: 'Blacklisted Individuals', emoji: 'ðŸ‘¤', type: 'dynamic', itemType: 'individual' },
+            { id: 'aliases', title: 'Aliases', emoji: 'ðŸŽ­', type: 'dynamic', itemType: 'alias' },
+            { id: 'organizations', title: 'Associated Organizations', emoji: 'ðŸ ¢', type: 'dynamic', itemType: 'organization' },
+            { id: 'legalReg', title: 'Legal Registration', emoji: 'âš–ï¸ ', type: 'dynamic', itemType: 'legalRegistration' },
+            { id: 'fraudAllegations', title: 'Allegations of Fraudulent Solicitations', emoji: 'ðŸ’°', type: 'dynamic', itemType: 'fraudulentSolicitation' },
+            { id: 'warnings', title: 'Warnings and First-Hand Accounts', emoji: 'âš ï¸ ', type: 'dynamic', itemType: 'warningAndAccount' },
+            { id: 'investigations', title: 'Animal Cruelty Investigations', emoji: 'ðŸ•µï¸ ', type: 'dynamic', itemType: 'investigation' },
+            { id: 'evidence', title: 'Enhanced Documentation & Evidence', emoji: 'ðŸ“‚', type: 'dynamic', itemType: 'evidence' },
+            { id: 'articles', title: 'News & Legal Documents', emoji: 'ðŸ“°', type: 'dynamic', itemType: 'article' },
+            { id: 'summary', title: 'Summary & Extra Details', emoji: 'ðŸ“ ', type: 'fields', fields: [
                 { id: 'backgroundInfo', label: "Background Information", type: 'textarea', rows: 6, aiAction: 'rewrite' },
                 { id: 'emergingReports', label: "Emerging Reports", type: 'textarea', rows: 3, aiAction: 'rewrite' },
                 { id: 'hashtags', label: "Hashtags", type: 'text', placeholder: "#Hashtag1 #Hashtag2", aiAction: 'suggest' },
@@ -1386,12 +1396,12 @@
                         let aiButtonHtml = '';
                         if (field.aiAction === 'suggest') {
                             aiButtonHtml = `<button id="${field.aiAction}Btn" class="ai-btn action-btn text-xs bg-purple-600 hover:bg-purple-700 text-white font-bold py-1 px-2 rounded-lg shadow">
-                                <span class="btn-text">✨ Suggest</span><span class="spinner">🌀</span>
+                                <span class="btn-text">âœ¨ Suggest</span><span class="spinner">ðŸŒ€</span>
                             </button>`;
                         } else if (field.aiAction === 'rewrite') {
                             aiButtonHtml = `<div class="dropdown">
                                 <button class="ai-btn action-btn text-xs bg-purple-600 hover:bg-purple-700 text-white font-bold py-1 px-2 rounded-lg shadow" data-field-id="${field.id}">
-                                    ✨ Rewrite with AI
+                                    âœ¨ Rewrite with AI
                                 </button>
                                 <div class="dropdown-content ai-rewrite-menu">
                                     <a href="#" data-rewrite-style="formal">More Formal</a>
@@ -1497,12 +1507,12 @@
                 item.className = 'category-manager-item';
                 item.dataset.id = category.id;
                 item.innerHTML = `
-                    <span class="handle">↕️</span>
+                    <span class="handle">â†•ï¸ </span>
                     <input type="text" value="${category.emoji}" class="w-10 p-1 border rounded-md emoji-input">
                     <input type="text" value="${category.title}" class="flex-grow p-1 border rounded-md title-input">
-                    <button class="modal-control-btn" data-action="move-up" ${index === 0 ? 'disabled' : ''}>🔼</button>
-                    <button class="modal-control-btn" data-action="move-down" ${index === appCategories.length - 1 ? 'disabled' : ''}>🔽</button>
-                    <button class="modal-control-btn text-red-500" data-action="delete">🗑️</button>
+                    <button class="modal-control-btn" data-action="move-up" ${index === 0 ? 'disabled' : ''}>ðŸ”¼</button>
+                    <button class="modal-control-btn" data-action="move-down" ${index === appCategories.length - 1 ? 'disabled' : ''}>ðŸ”½</button>
+                    <button class="modal-control-btn text-red-500" data-action="delete">ðŸ—‘ï¸ </button>
                 `;
                 lists.categories.appendChild(item);
             });
@@ -1542,7 +1552,7 @@
             const newCategory = {
                 id: title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, ''),
                 title: title,
-                emoji: '🆕',
+                emoji: 'ðŸ†•',
                 type: 'dynamic', // Default to dynamic
                 itemType: 'generic' // A new generic template might be needed
             };
@@ -1592,7 +1602,7 @@
                 // In a real application, you would fetch the URL content via a server-side proxy
                 // to avoid CORS issues. Here, we simulate it with sample text.
                 const articleText = `
-                    MAYAGÜEZ, PR – Jury selection was completed Tuesday in the animal cruelty case against Erica Marie Erickson in Mayagüez, Puerto Rico. 
+                    MAYAGÃœEZ, PR â€“ Jury selection was completed Tuesday in the animal cruelty case against Erica Marie Erickson in MayagÃ¼ez, Puerto Rico. 
                     The trial is set to begin on July 15, 2025. Previously, on May 7, 2025, a motion to dismiss was denied by the judge.
                     Erickson, also known as "Erica the Rescuer" on social media, faces multiple charges after dozens of malnourished animals were found on her property in early February.
                     Authorities were alerted by a former volunteer, Jane Smith, who provided testimony about the conditions. Another individual, John Doe, is also being investigated in connection with the case.
@@ -1782,7 +1792,7 @@
             }
 
             if (issues.length === 0) {
-                resultContainer.innerHTML = `<p class="text-green-600 font-semibold">✅ No obvious issues found. The post looks good!</p>`;
+                resultContainer.innerHTML = `<p class="text-green-600 font-semibold">âœ… No obvious issues found. The post looks good!</p>`;
                 button.classList.remove('loading');
                 button.disabled = false;
                 return;
@@ -1831,8 +1841,8 @@ Points of concern:
             loadAutosavedDraft();
         }
         
-        initialize();
-    });
+        document.addEventListener('DOMContentLoaded', initialize);
+    })(); // End IIFE
     </script>
 </body>
 </html>
