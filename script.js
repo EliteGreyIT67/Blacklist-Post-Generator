@@ -12,7 +12,6 @@
     const THEME_KEY = 'blacklistGeneratorTheme';
     const API_KEY_LS_KEY = 'blacklistGeneratorApiKey';
     let autosaveInterval;
-    let _confirmCallbacks = { onConfirm: null, onCancel: null };
 
     // --- DOM Elements ---
     const appContainer = document.getElementById('app-container');
@@ -26,7 +25,6 @@
     const themeToggle = document.getElementById('theme-toggle');
     const copyButtonText = document.getElementById('copyButtonText');
     const exportBtn = document.getElementById('exportBtn');
-    const exportDropdown = document.getElementById('exportDropdown');
     const redactBtn = document.getElementById('redactBtn');
     
     const modals = {
@@ -62,192 +60,6 @@
     // --- Debounce Function ---
     function debounce(func, delay) { let timeoutId; return function(...args) { clearTimeout(timeoutId); timeoutId = setTimeout(() => { func.apply(this, args); }, delay); }; }
     const debouncedUpdatePreview = debounce(updatePreview, 250);
-
-    // --- Event Listeners ---
-    formColumn.addEventListener('input', (e) => {
-        if (e.target.closest('.form-section')) {
-            debouncedUpdatePreview();
-            startAutosave();
-        }
-    });
-    formColumn.addEventListener('scroll', () => {
-        stickyHeader.classList.toggle('scrolled', formColumn.scrollTop > 0);
-    });
-    
-    themeToggle.addEventListener('change', toggleTheme);
-    postSearchInput.addEventListener('input', openLoadModal);
-    platformSelect.addEventListener('change', updatePreview);
-    
-    exportBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        exportBtn.parentElement.classList.toggle('show');
-    });
-    
-    // --- Redaction Listener ---
-    preview.addEventListener('mouseup', (e) => {
-        const selection = window.getSelection();
-        const selectedText = selection.toString().trim();
-        
-        if (selectedText.length > 0) {
-            textToRedact = selectedText;
-            const range = selection.getRangeAt(0);
-            const rect = range.getBoundingClientRect();
-            redactBtn.style.left = `${e.pageX}px`;
-            redactBtn.style.top = `${e.pageY - 35}px`;
-            redactBtn.style.display = 'block';
-        } else {
-            redactBtn.style.display = 'none';
-        }
-    });
-
-    redactBtn.addEventListener('click', () => {
-        if (!textToRedact) return;
-        
-        showConfirmation(`Are you sure you want to redact "${textToRedact}"? This cannot be easily undone.`, () => {
-            let redacted = false;
-            const allInputs = dynamicFormContainer.querySelectorAll('input, textarea');
-            for (const input of allInputs) {
-                if (input.value.includes(textToRedact)) {
-                    input.value = input.value.replace(new RegExp(textToRedact, 'g'), '[REDACTED]');
-                    input.dispatchEvent(new Event('input', { bubbles: true })); // Trigger update
-                    redacted = true;
-                }
-            }
-            if (redacted) {
-                showToast('Text redacted.', 'success');
-            } else {
-                showToast('Could not find the selected text in the form.', 'error');
-            }
-        });
-        
-        redactBtn.style.display = 'none';
-        textToRedact = '';
-    });
-
-    document.addEventListener('click', (e) => {
-        if (!exportBtn.parentElement.contains(e.target)) {
-            exportBtn.parentElement.classList.remove('show');
-        }
-        if (!redactBtn.contains(e.target) && !preview.contains(e.target)) {
-             redactBtn.style.display = 'none';
-        }
-    });
-
-    // --- Modal Listeners ---
-    Object.keys(closeButtons).forEach(key => {
-        if(closeButtons[key]) closeButtons[key].addEventListener('click', () => closeModal(modals[key]));
-    });
-    
-    function handleConfirm(isConfirmed) {
-        if (isConfirmed && typeof _confirmCallbacks.onConfirm === 'function') {
-            _confirmCallbacks.onConfirm();
-        } else if (!isConfirmed && typeof _confirmCallbacks.onCancel === 'function') {
-            _confirmCallbacks.onCancel();
-        }
-        closeModal(modals.confirm);
-    }
-
-    document.getElementById('confirmOkBtn').addEventListener('click', () => handleConfirm(true));
-    document.getElementById('confirmCancelBtn').addEventListener('click', () => handleConfirm(false));
-
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-            Object.values(modals).forEach(modal => {
-                if (modal && modal.style.display === 'flex') {
-                    if (modal === modals.confirm) handleConfirm(false);
-                    else closeModal(modal);
-                }
-            });
-        }
-    });
-
-    // --- Event Handlers ---
-    document.getElementById('newPost').addEventListener('click', confirmAndClearForm);
-    document.getElementById('loadPosts').addEventListener('click', openLoadModal);
-    document.getElementById('loadTemplate').addEventListener('click', openTemplatesModal);
-    document.getElementById('manageCategoriesBtn').addEventListener('click', openCategoryManager);
-    document.getElementById('saveOrUpdate').addEventListener('click', saveOrUpdatePost);
-    document.getElementById('saveAsNew').addEventListener('click', () => saveNewPost(true));
-    document.getElementById('copyButton').addEventListener('click', copyToClipboard);
-    document.getElementById('exportTxt').addEventListener('click', (e) => { e.preventDefault(); exportAsTxt(); });
-    document.getElementById('exportMd').addEventListener('click', (e) => { e.preventDefault(); exportAsMd(); });
-    document.getElementById('exportPdf').addEventListener('click', (e) => { e.preventDefault(); exportAsPdf(); });
-    document.getElementById('selectiveExportBtn').addEventListener('click', (e) => { e.preventDefault(); openSelectiveExportModal(); });
-    document.getElementById('exportPostsBtn').addEventListener('click', exportPosts);
-    document.getElementById('importPostsBtn').addEventListener('click', () => importFileInput.click());
-    importFileInput.addEventListener('change', handleImport);
-    document.getElementById('saveAsTemplateBtn').addEventListener('click', saveCurrentAsTemplate);
-    document.getElementById('addNewCategoryBtn').addEventListener('click', addNewCategory);
-    document.getElementById('saveCategoryChangesBtn').addEventListener('click', saveCategoryChanges);
-    document.getElementById('fetchArticleBtn').addEventListener('click', handleArticleExtraction);
-    document.getElementById('aiReviewBtn').addEventListener('click', runSanityCheck);
-    
-    function handleDynamicItemControls(e) {
-        const button = e.target.closest('.control-btn');
-        if (!button) return;
-        const item = button.closest('.dynamic-item');
-        const container = item.parentElement;
-        if (button.getAttribute('aria-label') === 'Remove item') {
-            item.remove();
-        } else if (button.getAttribute('aria-label') === 'Move item up') {
-            const prevSibling = item.previousElementSibling;
-            if (prevSibling) container.insertBefore(item, prevSibling);
-        } else if (button.getAttribute('aria-label') === 'Move item down') {
-            const nextSibling = item.nextElementSibling;
-            if (nextSibling) container.insertBefore(nextSibling, item);
-        }
-        updateItemControls(container);
-        debouncedUpdatePreview();
-        startAutosave();
-    }
-
-    function toggleSection(e) {
-        const header = e.currentTarget;
-        const content = document.getElementById(header.getAttribute('aria-controls'));
-        const icon = header.querySelector('.chevron-icon');
-        const isExpanded = header.getAttribute('aria-expanded') === 'true';
-        header.setAttribute('aria-expanded', !isExpanded);
-        header.classList.toggle('collapsed');
-        content.classList.toggle('collapsed');
-        icon.classList.toggle('collapsed');
-    }
-
-    // --- Dynamic Item Management ---
-    const itemTemplates = {
-        individual: (id) => `<div class="flex gap-4"><img class="image-preview" id="img-preview-${id}" src="https://placehold.co/64x64/f8fafc/cbd5e1?text=🖼️" onerror="this.onerror=null;this.src='https://placehold.co/64x64/f8fafc/cbd5e1?text=❌';"><div class="flex-grow"><label for="individual-img-${id}" class="block text-sm font-medium text-secondary mb-1">Image URL</label><input type="url" id="individual-img-${id}" name="individual-image-url" class="w-full p-2 border rounded-md mb-2 individual-image-url" oninput="this.closest('.dynamic-item').querySelector('.image-preview').src=this.value || 'https://placehold.co/64x64/f8fafc/cbd5e1?text=🖼️'"></div></div><div><label for="individual-name-${id}" class="block text-sm font-medium text-secondary mb-1">Full Name</label><input type="text" id="individual-name-${id}" name="individual-name" class="w-full p-2 border rounded-md mb-2 individual-name"></div><div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-2"><div><label for="individual-dob-${id}" class="block text-sm font-medium text-secondary mb-1">Date of Birth</label><input type="text" id="individual-dob-${id}" name="individual-dob" class="w-full p-2 border rounded-md individual-dob"></div><div><label for="individual-phone-${id}" class="block text-sm font-medium text-secondary mb-1">Phone Number</label><input type="tel" id="individual-phone-${id}" name="individual-phone" class="w-full p-2 border rounded-md individual-phone"></div></div><div><label for="individual-email-${id}" class="block text-sm font-medium text-secondary mb-1">Email Address</label><input type="email" id="individual-email-${id}" name="individual-email" class="w-full p-2 border rounded-md mb-2 individual-email"></div><div><label for="individual-address-${id}" class="block text-sm font-medium text-secondary mb-1">Last Known Address</label><textarea id="individual-address-${id}" name="individual-address" rows="2" class="w-full p-2 border rounded-md mb-2 individual-address"></textarea></div><h4 class="font-semibold text-sm mt-3 mb-1 text-gray-600 dark:text-gray-400">Social Media Links</h4><div class="space-y-2"><input type="url" placeholder="Facebook URL" name="individual-fb-link" class="w-full p-2 border rounded-md individual-fb-link" aria-label="Individual Facebook URL"><input type="url" placeholder="Instagram URL" name="individual-ig-link" class="w-full p-2 border rounded-md individual-ig-link" aria-label="Individual Instagram URL"><input type="url" placeholder="X (Twitter) URL" name="individual-x-link" class="w-full p-2 border rounded-md individual-x-link" aria-label="Individual X (Twitter) URL"><input type="text" placeholder="Other URLs (comma-sep)" name="individual-other-links" class="w-full p-2 border rounded-md individual-other-links" aria-label="Individual Other URLs"></div>`,
-        alias: (id) => `<div><label for="alias-name-${id}" class="block text-sm font-medium text-secondary mb-1">Alias Name</label><input type="text" id="alias-name-${id}" name="alias-name" class="w-full p-2 border rounded-md alias-name"></div>`,
-        organization: (id) => `<div><label for="org-name-${id}" class="block text-sm font-medium text-secondary mb-1">Organization Name</label><input type="text" id="org-name-${id}" name="org-name" class="w-full p-2 border rounded-md mb-2 org-name"></div><div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-2"><div><label for="org-ein-${id}" class="block text-sm font-medium text-secondary mb-1">EIN</label><input type="text" id="org-ein-${id}" name="org-ein" class="w-full p-2 border rounded-md org-ein"></div><div><label for="org-license-${id}" class="block text-sm font-medium text-secondary mb-1">License #</label><input type="text" id="org-license-${id}" name="org-license" class="w-full p-2 border rounded-md org-license"></div></div><div><label for="org-record-${id}" class="block text-sm font-medium text-secondary mb-1">Official Record Link</label><input type="url" id="org-record-${id}" name="org-record-link" class="w-full p-2 border rounded-md mb-2 org-record-link"></div><div><label for="org-status-${id}" class="block text-sm font-medium text-secondary mb-1">Status</label><input type="text" id="org-status-${id}" name="org-status" placeholder="e.g., Active, CLOSED" class="w-full p-2 border rounded-md mb-2 org-status"></div><h4 class="font-semibold text-sm mt-3 mb-1 text-gray-600 dark:text-gray-400">Links</h4><div class="grid grid-cols-1 md:grid-cols-2 gap-2"><input type="url" placeholder="Facebook URL" name="org-fb-link" class="w-full p-2 border rounded-md org-fb-link" aria-label="Organization Facebook URL"><input type="url" placeholder="Instagram URL" name="org-ig-link" class="w-full p-2 border rounded-md org-ig-link" aria-label="Organization Instagram URL"><input type="url" placeholder="X (Twitter) URL" name="org-x-link" class="w-full p-2 border rounded-md org-x-link" aria-label="Organization X (Twitter) URL"><input type="url" placeholder="Website URL" name="org-website-link" class="w-full p-2 border rounded-md org-website-link" aria-label="Organization Website URL"></div><div class="mt-2"><input type="text" placeholder="Other URLs (comma-sep)" name="org-other-links" class="w-full p-2 border rounded-md org-other-links" aria-label="Organization Other URLs"></div>`,
-        legalRegistration: (id) => `<div><label for="legal-title-${id}" class="block text-sm font-medium text-secondary mb-1">Document Title</label><input type="text" id="legal-title-${id}" name="legal-registration-title" class="w-full p-2 border rounded-md mb-2 legal-registration-title"></div><div><label for="legal-url-${id}" class="block text-sm font-medium text-secondary mb-1">URL</label><input type="url" id="legal-url-${id}" name="legal-registration-url" class="w-full p-2 border rounded-md mb-2 legal-registration-url"></div>`,
-        fraudulentSolicitation: (id) => `<div><label for="fraud-text-${id}" class="block text-sm font-medium text-secondary mb-1">Allegation Details</label><textarea id="fraud-text-${id}" name="fraudulent-solicitation-text" rows="3" class="w-full p-2 border rounded-md fraudulent-solicitation-text"></textarea></div>`,
-        warningAndAccount: (id) => `<div><label for="warning-text-${id}" class="block text-sm font-medium text-secondary mb-1">Account/Warning Details</label><textarea id="warning-text-${id}" name="warning-account-text" rows="3" class="w-full p-2 border rounded-md warning-account-text"></textarea></div>`,
-        investigation: (id) => `<div><label for="inv-title-${id}" class="block text-sm font-medium text-secondary mb-1">Title</label><input type="text" id="inv-title-${id}" name="investigation-title" class="w-full p-2 border rounded-md mb-2 investigation-title"></div><div><label for="inv-url-${id}" class="block text-sm font-medium text-secondary mb-1">URL</label><input type="url" id="inv-url-${id}" name="investigation-url" class="w-full p-2 border rounded-md mb-2 investigation-url"></div>`,
-        evidence: (id) => `<div class="flex gap-4"><img class="image-preview" id="img-preview-${id}" src="https://placehold.co/64x64/f8fafc/cbd5e1?text=🖼️" onerror="this.onerror=null;this.src='https://placehold.co/64x64/f8fafc/cbd5e1?text=❌';"><div class="flex-grow"><label for="evidence-img-${id}" class="block text-sm font-medium text-secondary mb-1">Upload Image</label><input type="file" id="evidence-img-${id}" class="w-full p-1 border rounded-md mb-2 evidence-image-upload" accept="image/*" data-preview-id="img-preview-${id}"></div></div><div><label for="evidence-title-${id}" class="block text-sm font-medium text-secondary mb-1">Title</label><input type="text" id="evidence-title-${id}" name="evidence-title" class="w-full p-2 border rounded-md mb-2 evidence-title"></div><div><label for="evidence-desc-${id}" class="block text-sm font-medium text-secondary mb-1">Description</label><textarea id="evidence-desc-${id}" name="evidence-description" rows="3" class="w-full p-2 border rounded-md mb-2 evidence-description"></textarea></div><div class="grid grid-cols-1 md:grid-cols-2 gap-2"><div><label for="evidence-url-${id}" class="block text-sm font-medium text-secondary mb-1">Source URL</label><input type="url" id="evidence-url-${id}" name="evidence-url" class="w-full p-2 border rounded-md evidence-url"></div><div><label for="evidence-date-${id}" class="block text-sm font-medium text-secondary mb-1">Date (Optional)</label><input type="date" id="evidence-date-${id}" name="evidence-date" class="w-full p-2 border rounded-md evidence-date"></div></div><textarea id="evidence-img-data-${id}" name="evidence-image-data" class="hidden evidence-image-data"></textarea>`,
-        article: (id) => `<div><label for="art-title-${id}" class="block text-sm font-medium text-secondary mb-1">Title</label><input type="text" id="art-title-${id}" name="article-title" class="w-full p-2 border rounded-md mb-2 article-title"></div><div><label for="art-url-${id}" class="block text-sm font-medium text-secondary mb-1">URL</label><input type="url" id="art-url-${id}" name="article-url" class="w-full p-2 border rounded-md mb-2 article-url"></div>`,
-        timelineEvent: (id) => `<div><label for="timeline-date-${id}" class="block text-sm font-medium text-secondary mb-1">Date</label><input type="date" id="timeline-date-${id}" name="timeline-date" class="w-full p-2 border rounded-md timeline-date"></div><div><label for="timeline-desc-${id}" class="block text-sm font-medium text-secondary mb-1">Description</label><input type="text" id="timeline-desc-${id}" name="timeline-description" placeholder="e.g., Court Hearing" class="w-full p-2 border rounded-md timeline-description"></div>`,
-        generic: (id) => `<div><label for="generic-text-${id}" class="block text-sm font-medium text-secondary mb-1">Content</label><textarea id="generic-text-${id}" name="generic-text" rows="3" class="w-full p-2 border rounded-md generic-text"></textarea></div>`
-    };
-
-    function addDynamicItem(container, itemType, options = {}) {
-        const { suppressSideEffects = false } = options;
-        if (!container || !itemType || !itemTemplates[itemType]) return null;
-        
-        const uniqueId = `${itemType}-${Date.now()}`;
-        const div = document.createElement('div');
-        div.className = 'dynamic-item';
-        div.innerHTML = `<div class="item-controls"><button class="control-btn up-btn" aria-label="Move item up">▲</button><button class="control-btn down-btn" aria-label="Move item down">▼</button><button class="control-btn remove-btn" aria-label="Remove item">X</button></div>${itemTemplates[itemType](uniqueId)}`;
-        
-        const emptyState = container.querySelector('.empty-state');
-        if (emptyState) emptyState.style.display = 'none';
-        
-        container.appendChild(div);
-
-        if (!suppressSideEffects) {
-            updateItemControls(container);
-            debouncedUpdatePreview();
-            startAutosave();
-        }
-        return div;
-    }
 
     // --- Core Logic: Preview & Formatting ---
     function updatePreview(options = {}) {
@@ -357,9 +169,9 @@
     function getFromStorage(key) { try { return JSON.parse(localStorage.getItem(key)) || null; } catch (e) { return null; } }
     function saveToStorage(key, data) { localStorage.setItem(key, JSON.stringify(data)); }
     
-    function saveOrUpdatePost() { if (currentPostId) { updatePost(); } else { saveNewPost(); } }
+    async function saveOrUpdatePost() { if (currentPostId) { await updatePost(); } else { await saveNewPost(); } }
     
-    function saveNewPost(isSaveAs = false) {
+    async function saveNewPost(isSaveAs = false) {
         const subjectName = document.getElementById('subjectName')?.value || "Untitled Post";
         const promptName = isSaveAs && currentPostName !== 'New Post' ? `${currentPostName} (Copy)` : subjectName;
         const postName = prompt("Enter a name for this new post:", promptName);
@@ -381,7 +193,7 @@
         updateUIForState();
     }
 
-    function updatePost() {
+    async function updatePost() {
         if (!currentPostId) return;
         
         const posts = getFromStorage(LOCAL_STORAGE_KEY) || [];
@@ -398,7 +210,7 @@
             clearAutosave();
             updateUIForState();
         } else {
-            saveNewPost();
+            await saveNewPost();
         }
     }
     
@@ -430,27 +242,25 @@
             });
         }
         
-        if (document.getElementById('loadPostsModal').style.display !== 'flex') openModal(modals.loadPosts);
+        if (modals.loadPosts.style.display !== 'flex') openModal(modals.loadPosts);
     }
 
-    function handleModalListClick(evt) {
+    async function handleModalListClick(evt) {
         const textTarget = evt.target.closest('.modal-list-item-text');
         const controlTarget = evt.target.closest('.modal-control-btn');
 
         if (textTarget) {
-            loadSpecificPost(textTarget.dataset.postId);
+            await loadSpecificPost(textTarget.dataset.postId);
         } else if (controlTarget) {
             const { historyId, exportId, deleteId, deleteName } = controlTarget.dataset;
             if (historyId) openHistoryModal(historyId);
             else if (exportId) exportSinglePost(exportId);
-            else if (deleteId) deletePost(deleteId, deleteName);
+            else if (deleteId) await deletePost(deleteId, deleteName);
         }
     }
     
-    lists.savedPosts.addEventListener('click', handleModalListClick);
-
-    function loadSpecificPost(postId) {
-        showConfirmation("Loading this post will overwrite your current unsaved changes. Continue?", () => {
+    async function loadSpecificPost(postId) {
+        if (await showConfirmation("Loading this post will overwrite your current unsaved changes. Continue?")) {
             const posts = getFromStorage(LOCAL_STORAGE_KEY) || [];
             const postToLoad = posts.find(p => p.id === postId);
             if (postToLoad) {
@@ -458,11 +268,11 @@
                 closeModal(modals.loadPosts);
                 showToast(`Loaded post: ${postToLoad.name}`, 'success');
             }
-        });
+        }
     }
 
-    function deletePost(postId, postName) {
-        showConfirmation(`Are you sure you want to delete "${postName}" and all its history? This cannot be undone.`, () => {
+    async function deletePost(postId, postName) {
+        if (await showConfirmation(`Are you sure you want to delete "${postName}" and all its history? This cannot be undone.`)) {
             const posts = getFromStorage(LOCAL_STORAGE_KEY) || [];
             saveToStorage(LOCAL_STORAGE_KEY, posts.filter(p => p.id !== postId));
             localStorage.removeItem(VERSIONS_PREFIX + postId);
@@ -471,7 +281,7 @@
             }
             openLoadModal(); // Refresh the modal list
             showToast(`Post "${postName}" deleted.`, 'success');
-        });
+        }
     }
 
     // --- Utility Functions ---
@@ -499,10 +309,12 @@
         updatePreview();
     }
     
-    function confirmAndClearForm() {
+    async function confirmAndClearForm() {
         const hasUnsavedChanges = localStorage.getItem(AUTOSAVE_KEY);
         if (hasUnsavedChanges) {
-            showConfirmation("Are you sure you want to start a new post? All unsaved changes will be lost.", () => clearForm());
+            if (await showConfirmation("Are you sure you want to start a new post? All unsaved changes will be lost.")) {
+                clearForm();
+            }
         } else {
             clearForm();
         }
@@ -634,11 +446,12 @@
 
     function startAutosave() {
         clearInterval(autosaveInterval);
-        editingStatus.textContent = 'Unsaved changes...';
+        updateUIForState(); // Show unsaved changes status immediately
         autosaveInterval = setInterval(() => {
             const data = getFormData();
+            data.savedAt = new Date().toISOString(); // Add timestamp to autosave data
             saveToStorage(AUTOSAVE_KEY, data);
-            editingStatus.textContent = `Draft saved at ${new Date().toLocaleTimeString()}`;
+            updateUIForState(); // Update status to "Draft saved at..."
         }, 10000);
     }
 
@@ -647,10 +460,10 @@
         localStorage.removeItem(AUTOSAVE_KEY);
     }
 
-    function loadAutosavedDraft() {
+    async function loadAutosavedDraft() {
         const draft = getFromStorage(AUTOSAVE_KEY);
         if (draft) {
-            showConfirmation( "We found an unsaved draft. Would you like to restore it?", () => {
+            if (await showConfirmation("We found an unsaved draft. Would you like to restore it?")) {
                 try {
                     populateForm(draft);
                     showToast("Draft restored.", 'info');
@@ -660,10 +473,10 @@
                     clearAutosave();
                     clearForm();
                 }
-            }, () => {
+            } else {
                 clearAutosave();
                 clearForm();
-            });
+            }
         } else {
             clearForm();
         }
@@ -697,16 +510,16 @@
         URL.revokeObjectURL(url);
     }
 
-    function handleImport(event) {
+    async function handleImport(event) {
         const file = event.target.files[0];
         if (!file) return;
         const reader = new FileReader();
-        reader.onload = (e) => {
+        reader.onload = async (e) => {
             try {
                 const importedData = JSON.parse(e.target.result);
                 const importedPosts = Array.isArray(importedData) ? importedData : [importedData];
                 
-                showConfirmation(`Found ${importedPosts.length} posts. Do you want to merge these by adding new posts from the file?`, () => {
+                if (await showConfirmation(`Found ${importedPosts.length} post(s). Do you want to merge these by adding new posts from the file?`)) {
                     const existingPosts = getFromStorage(LOCAL_STORAGE_KEY) || [];
                     const existingIds = new Set(existingPosts.map(p => p.id));
                     let addedCount = 0;
@@ -719,7 +532,7 @@
                     saveToStorage(LOCAL_STORAGE_KEY, existingPosts);
                     showToast(`${addedCount} new posts imported successfully!`, 'success');
                     openLoadModal();
-                });
+                }
             } catch (err) {
                 showToast("Import failed. Invalid file format.", 'error');
             } finally {
@@ -746,18 +559,18 @@
         openModal(modals.templates);
     }
     
-    lists.templates.addEventListener('click', (evt) => {
+    async function handleTemplateModalClick(evt) {
         const textTarget = evt.target.closest('.modal-list-item-text');
         const controlTarget = evt.target.closest('.modal-control-btn');
 
         if (textTarget) {
-            loadTemplate(textTarget.dataset.templateId);
+            await loadTemplate(textTarget.dataset.templateId);
         } else if (controlTarget) {
-            deleteTemplate(controlTarget.dataset.deleteId, controlTarget.dataset.deleteName);
+            await deleteTemplate(controlTarget.dataset.deleteId, controlTarget.dataset.deleteName);
         }
-    });
+    }
 
-    function saveCurrentAsTemplate() {
+    async function saveCurrentAsTemplate() {
         const templateName = prompt("Enter a name for this template:");
         if (!templateName) return;
         const data = getFormData(true);
@@ -770,8 +583,8 @@
         openTemplatesModal(); // Refresh list
     }
 
-    function loadTemplate(templateId) {
-        showConfirmation("Loading this template will overwrite your current unsaved changes. Continue?", () => {
+    async function loadTemplate(templateId) {
+        if (await showConfirmation("Loading this template will overwrite your current unsaved changes. Continue?")) {
             const templates = getFromStorage(TEMPLATES_KEY) || [];
             const template = templates.find(t => t.id === templateId);
             if (template) {
@@ -779,16 +592,16 @@
                 closeModal(modals.templates);
                 showToast(`Loaded template: ${template.name}`, 'success');
             }
-        });
+        }
     }
 
-    function deleteTemplate(templateId, templateName) {
-        showConfirmation(`Are you sure you want to delete the template "${templateName}"?`, () => {
+    async function deleteTemplate(templateId, templateName) {
+        if (await showConfirmation(`Are you sure you want to delete the template "${templateName}"?`)) {
             const templates = getFromStorage(TEMPLATES_KEY) || [];
             saveToStorage(TEMPLATES_KEY, templates.filter(t => t.id !== templateId));
             showToast(`Template "${templateName}" deleted.`, 'success');
             openTemplatesModal(); // Refresh list
-        });
+        }
     }
 
     // --- Version History Functions ---
@@ -819,15 +632,15 @@
         openModal(modals.history);
     }
     
-    lists.history.addEventListener('click', (evt) => {
+    async function handleHistoryModalClick(evt) {
         const button = evt.target.closest('[data-version-id]');
         if(button) {
-            restoreVersion(button.dataset.postId, button.dataset.versionId);
+            await restoreVersion(button.dataset.postId, button.dataset.versionId);
         }
-    });
+    }
 
-    function restoreVersion(postId, versionId) {
-        showConfirmation("Restoring this version will overwrite the current post content. Continue?", () => {
+    async function restoreVersion(postId, versionId) {
+        if (await showConfirmation("Restoring this version will overwrite the current post content. Continue?")) {
             const versions = getFromStorage(VERSIONS_PREFIX + postId) || [];
             const versionToRestore = versions.find(v => v.versionId === versionId);
             if (versionToRestore) {
@@ -837,7 +650,7 @@
             } else {
                 showToast("Could not find version to restore.", 'error');
             }
-        });
+        }
     }
 
     // --- Gemini AI Functions ---
@@ -1020,7 +833,7 @@
         appCategories.forEach(category => {
             const item = document.createElement('div');
             item.innerHTML = `
-                <label>
+                <label class="flex items-center gap-2 p-1">
                     <input type="checkbox" class="selective-export-checkbox" value="${category.id}" checked>
                     <span>${category.emoji} ${category.title}</span>
                 </label>
@@ -1030,20 +843,31 @@
         openModal(modals.selectiveExport);
     }
 
-    document.getElementById('performSelectiveExportBtn').addEventListener('click', () => {
-        const selectedCategories = Array.from(document.querySelectorAll('.selective-export-checkbox:checked')).map(cb => cb.value);
-        exportAsMd(selectedCategories); // Defaulting to MD for selective, could add more options
-        closeModal(modals.selectiveExport);
-    });
-
-
     // --- Toast & Modal Helpers ---
     function showToast(message, type = 'success') { const toastContainer = document.getElementById('toast-container'); const toast = document.createElement('div'); toast.className = `toast ${type}`; toast.textContent = message; toastContainer.appendChild(toast); setTimeout(() => { toast.classList.add('show'); }, 10); setTimeout(() => { toast.classList.remove('show'); toast.addEventListener('transitionend', () => toast.remove()); }, 4000); }
     
-    function showConfirmation(message, onConfirm, onCancel) {
-        document.getElementById('confirmModalText').textContent = message;
-        _confirmCallbacks = { onConfirm, onCancel };
-        openModal(modals.confirm);
+    function showConfirmation(message) {
+        return new Promise((resolve) => {
+            document.getElementById('confirmModalText').textContent = message;
+            
+            const confirmBtn = document.getElementById('confirmOkBtn');
+            const cancelBtn = document.getElementById('confirmCancelBtn');
+
+            const newConfirmBtn = confirmBtn.cloneNode(true);
+            const newCancelBtn = cancelBtn.cloneNode(true);
+            confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+            cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+
+            const cleanup = (isConfirmed) => {
+                closeModal(modals.confirm);
+                resolve(isConfirmed);
+            };
+
+            newConfirmBtn.addEventListener('click', () => cleanup(true), { once: true });
+            newCancelBtn.addEventListener('click', () => cleanup(false), { once: true });
+            
+            openModal(modals.confirm);
+        });
     }
 
     function openModal(modalElement) {
@@ -1058,32 +882,30 @@
         if (!modalElement) return;
         modalElement.style.display = 'none';
         appContainer.removeAttribute('aria-hidden');
-        if (modalElement === modals.confirm) {
-            _confirmCallbacks = { onConfirm: null, onCancel: null };
-        }
     }
     
     function updateUIForState() {
-        if (localStorage.getItem(AUTOSAVE_KEY)) {
-             editingStatus.textContent = `Draft saved at ${new Date(JSON.parse(localStorage.getItem(AUTOSAVE_KEY))?.savedAt || Date.now()).toLocaleTimeString()}`;
-             document.getElementById('saveOrUpdate').textContent = 'Save Draft'; // Indicate it's saving the draft
-             document.getElementById('saveOrUpdate').classList.remove('bg-indigo-600', 'hover:bg-indigo-700', 'bg-purple-600', 'hover:bg-purple-700');
-             document.getElementById('saveOrUpdate').classList.add('bg-yellow-600', 'hover:bg-yellow-700');
-             return;
-        }
+        clearInterval(autosaveInterval); // Stop any pending autosave timer
+        const saveOrUpdateButton = document.getElementById('saveOrUpdate');
+        const hasUnsavedChanges = localStorage.getItem(AUTOSAVE_KEY);
 
-        clearInterval(autosaveInterval);
         if (currentPostId) {
-            const subjectName = document.getElementById('subjectName')?.value;
-            editingStatus.textContent = `Editing: ${currentPostName || subjectName || 'Untitled'}`;
-            document.getElementById('saveOrUpdate').textContent = 'Update';
-            document.getElementById('saveOrUpdate').classList.remove('bg-indigo-600', 'hover:bg-indigo-700', 'bg-yellow-600', 'hover:bg-yellow-700');
-            document.getElementById('saveOrUpdate').classList.add('bg-purple-600', 'hover:bg-purple-700');
+            // Editing a saved post
+            editingStatus.textContent = `Editing: ${currentPostName}`;
+            saveOrUpdateButton.textContent = 'Update';
+            saveOrUpdateButton.className = 'action-btn w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg shadow';
+        } else if (hasUnsavedChanges) {
+            // Working on a new post with a draft
+            const draftData = getFromStorage(AUTOSAVE_KEY);
+            const draftDate = draftData?.savedAt ? new Date(draftData.savedAt) : new Date();
+            editingStatus.textContent = `Unsaved Draft (from ${draftDate.toLocaleTimeString()})`;
+            saveOrUpdateButton.textContent = 'Save Draft';
+            saveOrUpdateButton.className = 'action-btn w-full bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded-lg shadow';
         } else {
-            editingStatus.textContent = '';
-            document.getElementById('saveOrUpdate').textContent = 'Save';
-            document.getElementById('saveOrUpdate').classList.remove('bg-purple-600', 'hover:bg-purple-700', 'bg-yellow-600', 'hover:bg-yellow-700');
-            document.getElementById('saveOrUpdate').classList.add('bg-indigo-600', 'hover:bg-indigo-700');
+            // A completely new, empty post
+            editingStatus.textContent = 'New Post';
+            saveOrUpdateButton.textContent = 'Save';
+            saveOrUpdateButton.className = 'action-btn w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg shadow';
         }
     }
 
@@ -1126,13 +948,13 @@
                 const fieldsHtml = category.fields.map(field => {
                     let aiButtonHtml = '';
                     if (field.aiAction === 'suggest') {
-                        aiButtonHtml = `<button id="suggestHashtagsBtn" class="ai-btn action-btn text-xs bg-purple-600 hover:bg-purple-700 text-white font-bold py-1 px-2 rounded-lg shadow">
+                        aiButtonHtml = `<button data-ai-action="suggest" class="ai-btn action-btn text-xs bg-purple-600 hover:bg-purple-700 text-white font-bold py-1 px-2 rounded-lg shadow">
                             <span class="btn-text">✨ Suggest</span><span class="spinner">🌀</span>
                         </button>`;
                     } else if (field.aiAction === 'rewrite') {
                         aiButtonHtml = `<div class="dropdown">
                             <button class="ai-btn action-btn text-xs bg-purple-600 hover:bg-purple-700 text-white font-bold py-1 px-2 rounded-lg shadow" data-field-id="${field.id}">
-                                ✨ Rewrite with AI
+                                ✨ Rewrite
                             </button>
                             <div class="dropdown-content ai-rewrite-menu">
                                 <a href="#" data-rewrite-style="formal">More Formal</a>
@@ -1177,57 +999,13 @@
             new Sortable(container, {
                 animation: 150,
                 ghostClass: 'sortable-ghost',
+                handle: '.item-controls', // Optional: Makes only a specific handle draggable
                 onEnd: () => {
                     updateItemControls(container);
                     debouncedUpdatePreview();
                     startAutosave();
                 }
             });
-        });
-
-        // Re-attach event listeners for new elements
-        document.querySelectorAll('.form-section-header').forEach(header => {
-            header.addEventListener('click', toggleSection);
-            header.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleSection(e); } });
-        });
-        document.querySelectorAll('.add-dynamic-item-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const container = document.getElementById(e.currentTarget.dataset.containerId);
-                addDynamicItem(container, e.currentTarget.dataset.itemType);
-            });
-        });
-        document.getElementById('suggestHashtagsBtn')?.addEventListener('click', (e) => {
-            const element = document.getElementById('hashtags');
-            handleAIAssist('suggest', element, e.currentTarget);
-        });
-        document.querySelectorAll('[data-field-id]').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                e.currentTarget.parentElement.classList.toggle('show');
-            });
-        });
-        document.querySelectorAll('[data-rewrite-style]').forEach(link => {
-            link.addEventListener('click', (e) => {
-                e.preventDefault();
-                const style = e.currentTarget.dataset.rewriteStyle;
-                const dropdown = e.currentTarget.closest('.dropdown');
-                const button = dropdown.querySelector('button');
-                const fieldId = button.dataset.fieldId;
-                const element = document.getElementById(fieldId);
-                handleAIAssist(style, element, button);
-                dropdown.classList.remove('show');
-            });
-        });
-
-        dynamicFormContainer.addEventListener('click', (e) => {
-            if (e.target.closest('.control-btn')) {
-                handleDynamicItemControls(e);
-            }
-        });
-        dynamicFormContainer.addEventListener('change', (e) => {
-             if (e.target.classList.contains('evidence-image-upload')) {
-                handleImageUpload(e);
-            }
         });
     }
 
@@ -1252,34 +1030,34 @@
             `;
             lists.categories.appendChild(item);
         });
+    }
 
-        lists.categories.addEventListener('click', (e) => {
-            const button = e.target.closest('button');
-            if (!button) return;
-            const item = button.closest('.category-manager-item');
-            const id = item.dataset.id;
-            const currentIndex = appCategories.findIndex(c => c.id === id);
+    async function handleCategoryManagerClick(e) {
+        const button = e.target.closest('button');
+        if (!button) return;
+        const item = button.closest('.category-manager-item');
+        const id = item.dataset.id;
+        const currentIndex = appCategories.findIndex(c => c.id === id);
 
-            switch(button.dataset.action) {
-                case 'move-up':
-                    if (currentIndex > 0) {
-                        [appCategories[currentIndex], appCategories[currentIndex - 1]] = [appCategories[currentIndex - 1], appCategories[currentIndex]];
-                    }
-                    break;
-                case 'move-down':
-                    if (currentIndex < appCategories.length - 1) {
-                        [appCategories[currentIndex], appCategories[currentIndex + 1]] = [appCategories[currentIndex + 1], appCategories[currentIndex]];
-                    }
-                    break;
-                case 'delete':
-                    showConfirmation(`Are you sure you want to delete the "${appCategories[currentIndex].title}" category? This cannot be undone.`, () => {
-                       appCategories.splice(currentIndex, 1);
-                       renderCategoryList();
-                    });
-                    return; // Prevent re-render before confirmation
-            }
-            renderCategoryList();
-        });
+        switch(button.dataset.action) {
+            case 'move-up':
+                if (currentIndex > 0) {
+                    [appCategories[currentIndex], appCategories[currentIndex - 1]] = [appCategories[currentIndex - 1], appCategories[currentIndex]];
+                }
+                break;
+            case 'move-down':
+                if (currentIndex < appCategories.length - 1) {
+                    [appCategories[currentIndex], appCategories[currentIndex + 1]] = [appCategories[currentIndex + 1], appCategories[currentIndex]];
+                }
+                break;
+            case 'delete':
+                if (await showConfirmation(`Are you sure you want to delete the "${appCategories[currentIndex].title}" category? This cannot be undone.`)) {
+                   appCategories.splice(currentIndex, 1);
+                   renderCategoryList();
+                }
+                return; // Prevent re-render before confirmation
+        }
+        renderCategoryList();
     }
 
     function addNewCategory() {
@@ -1394,10 +1172,10 @@
             const result = await callGeminiAPI(prompt, jsonSchema);
             const extractedData = JSON.parse(result);
             
-            showConfirmation("AI has extracted information from the article. Do you want to apply it to the form? This will overwrite existing data in the filled fields.", () => {
+            if (await showConfirmation("AI has extracted information from the article. Do you want to apply it to the form? This will overwrite existing data in the filled fields.")) {
                 populateFormWithExtractedData(extractedData);
                 showToast('Information applied successfully!', 'success');
-            });
+            }
 
         } catch (error) {
             console.error('Article Extraction Error:', error);
@@ -1554,9 +1332,46 @@ Points of concern:
         }
     }
 
+    // --- Dynamic Item Management ---
+    const itemTemplates = {
+        individual: (id) => `<div class="item-content-wrapper"><div class="flex gap-4"><img class="image-preview" id="img-preview-${id}" src="https://placehold.co/64x64/f8fafc/cbd5e1?text=🖼️" onerror="this.onerror=null;this.src='https://placehold.co/64x64/f8fafc/cbd5e1?text=❌';"><div class="flex-grow"><label for="individual-img-${id}" class="block text-sm font-medium text-secondary mb-1">Image URL</label><input type="url" id="individual-img-${id}" name="individual-image-url" class="w-full p-2 border rounded-md mb-2 individual-image-url" oninput="this.closest('.dynamic-item').querySelector('.image-preview').src=this.value || 'https://placehold.co/64x64/f8fafc/cbd5e1?text=🖼️'"></div></div><div><label for="individual-name-${id}" class="block text-sm font-medium text-secondary mb-1">Full Name</label><input type="text" id="individual-name-${id}" name="individual-name" class="w-full p-2 border rounded-md mb-2 individual-name"></div><div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-2"><div><label for="individual-dob-${id}" class="block text-sm font-medium text-secondary mb-1">Date of Birth</label><input type="text" id="individual-dob-${id}" name="individual-dob" class="w-full p-2 border rounded-md individual-dob"></div><div><label for="individual-phone-${id}" class="block text-sm font-medium text-secondary mb-1">Phone Number</label><input type="tel" id="individual-phone-${id}" name="individual-phone" class="w-full p-2 border rounded-md individual-phone"></div></div><div><label for="individual-email-${id}" class="block text-sm font-medium text-secondary mb-1">Email Address</label><input type="email" id="individual-email-${id}" name="individual-email" class="w-full p-2 border rounded-md mb-2 individual-email"></div><div><label for="individual-address-${id}" class="block text-sm font-medium text-secondary mb-1">Last Known Address</label><textarea id="individual-address-${id}" name="individual-address" rows="2" class="w-full p-2 border rounded-md mb-2 individual-address"></textarea></div><h4 class="font-semibold text-sm mt-3 mb-1 text-gray-600 dark:text-gray-400">Social Media Links</h4><div class="space-y-2"><input type="url" placeholder="Facebook URL" name="individual-fb-link" class="w-full p-2 border rounded-md individual-fb-link" aria-label="Individual Facebook URL"><input type="url" placeholder="Instagram URL" name="individual-ig-link" class="w-full p-2 border rounded-md individual-ig-link" aria-label="Individual Instagram URL"><input type="url" placeholder="X (Twitter) URL" name="individual-x-link" class="w-full p-2 border rounded-md individual-x-link" aria-label="Individual X (Twitter) URL"><input type="text" placeholder="Other URLs (comma-sep)" name="individual-other-links" class="w-full p-2 border rounded-md individual-other-links" aria-label="Individual Other URLs"></div></div>`,
+        alias: (id) => `<div class="item-content-wrapper"><div><label for="alias-name-${id}" class="block text-sm font-medium text-secondary mb-1">Alias Name</label><input type="text" id="alias-name-${id}" name="alias-name" class="w-full p-2 border rounded-md alias-name"></div></div>`,
+        organization: (id) => `<div class="item-content-wrapper"><div><label for="org-name-${id}" class="block text-sm font-medium text-secondary mb-1">Organization Name</label><input type="text" id="org-name-${id}" name="org-name" class="w-full p-2 border rounded-md mb-2 org-name"></div><div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-2"><div><label for="org-ein-${id}" class="block text-sm font-medium text-secondary mb-1">EIN</label><input type="text" id="org-ein-${id}" name="org-ein" class="w-full p-2 border rounded-md org-ein"></div><div><label for="org-license-${id}" class="block text-sm font-medium text-secondary mb-1">License #</label><input type="text" id="org-license-${id}" name="org-license" class="w-full p-2 border rounded-md org-license"></div></div><div><label for="org-record-${id}" class="block text-sm font-medium text-secondary mb-1">Official Record Link</label><input type="url" id="org-record-${id}" name="org-record-link" class="w-full p-2 border rounded-md mb-2 org-record-link"></div><div><label for="org-status-${id}" class="block text-sm font-medium text-secondary mb-1">Status</label><input type="text" id="org-status-${id}" name="org-status" placeholder="e.g., Active, CLOSED" class="w-full p-2 border rounded-md mb-2 org-status"></div><h4 class="font-semibold text-sm mt-3 mb-1 text-gray-600 dark:text-gray-400">Links</h4><div class="grid grid-cols-1 md:grid-cols-2 gap-2"><input type="url" placeholder="Facebook URL" name="org-fb-link" class="w-full p-2 border rounded-md org-fb-link" aria-label="Organization Facebook URL"><input type="url" placeholder="Instagram URL" name="org-ig-link" class="w-full p-2 border rounded-md org-ig-link" aria-label="Organization Instagram URL"><input type="url" placeholder="X (Twitter) URL" name="org-x-link" class="w-full p-2 border rounded-md org-x-link" aria-label="Organization X (Twitter) URL"><input type="url" placeholder="Website URL" name="org-website-link" class="w-full p-2 border rounded-md org-website-link" aria-label="Organization Website URL"></div><div class="mt-2"><input type="text" placeholder="Other URLs (comma-sep)" name="org-other-links" class="w-full p-2 border rounded-md org-other-links" aria-label="Organization Other URLs"></div></div>`,
+        legalRegistration: (id) => `<div class="item-content-wrapper"><div><label for="legal-title-${id}" class="block text-sm font-medium text-secondary mb-1">Document Title</label><input type="text" id="legal-title-${id}" name="legal-registration-title" class="w-full p-2 border rounded-md mb-2 legal-registration-title"></div><div><label for="legal-url-${id}" class="block text-sm font-medium text-secondary mb-1">URL</label><input type="url" id="legal-url-${id}" name="legal-registration-url" class="w-full p-2 border rounded-md mb-2 legal-registration-url"></div></div>`,
+        fraudulentSolicitation: (id) => `<div class="item-content-wrapper"><div><label for="fraud-text-${id}" class="block text-sm font-medium text-secondary mb-1">Allegation Details</label><textarea id="fraud-text-${id}" name="fraudulent-solicitation-text" rows="3" class="w-full p-2 border rounded-md fraudulent-solicitation-text"></textarea></div></div>`,
+        warningAndAccount: (id) => `<div class="item-content-wrapper"><div><label for="warning-text-${id}" class="block text-sm font-medium text-secondary mb-1">Account/Warning Details</label><textarea id="warning-text-${id}" name="warning-account-text" rows="3" class="w-full p-2 border rounded-md warning-account-text"></textarea></div></div>`,
+        investigation: (id) => `<div class="item-content-wrapper"><div><label for="inv-title-${id}" class="block text-sm font-medium text-secondary mb-1">Title</label><input type="text" id="inv-title-${id}" name="investigation-title" class="w-full p-2 border rounded-md mb-2 investigation-title"></div><div><label for="inv-url-${id}" class="block text-sm font-medium text-secondary mb-1">URL</label><input type="url" id="inv-url-${id}" name="investigation-url" class="w-full p-2 border rounded-md mb-2 investigation-url"></div></div>`,
+        evidence: (id) => `<div class="item-content-wrapper"><div class="flex gap-4"><img class="image-preview" id="img-preview-${id}" src="https://placehold.co/64x64/f8fafc/cbd5e1?text=🖼️" onerror="this.onerror=null;this.src='https://placehold.co/64x64/f8fafc/cbd5e1?text=❌';"><div class="flex-grow"><label for="evidence-img-${id}" class="block text-sm font-medium text-secondary mb-1">Upload Image</label><input type="file" id="evidence-img-${id}" class="w-full p-1 border rounded-md mb-2 evidence-image-upload" accept="image/*" data-preview-id="img-preview-${id}"></div></div><div><label for="evidence-title-${id}" class="block text-sm font-medium text-secondary mb-1">Title</label><input type="text" id="evidence-title-${id}" name="evidence-title" class="w-full p-2 border rounded-md mb-2 evidence-title"></div><div><label for="evidence-desc-${id}" class="block text-sm font-medium text-secondary mb-1">Description</label><textarea id="evidence-desc-${id}" name="evidence-description" rows="3" class="w-full p-2 border rounded-md mb-2 evidence-description"></textarea></div><div class="grid grid-cols-1 md:grid-cols-2 gap-2"><div><label for="evidence-url-${id}" class="block text-sm font-medium text-secondary mb-1">Source URL</label><input type="url" id="evidence-url-${id}" name="evidence-url" class="w-full p-2 border rounded-md evidence-url"></div><div><label for="evidence-date-${id}" class="block text-sm font-medium text-secondary mb-1">Date (Optional)</label><input type="date" id="evidence-date-${id}" name="evidence-date" class="w-full p-2 border rounded-md evidence-date"></div></div><textarea id="evidence-img-data-${id}" name="evidence-image-data" class="hidden evidence-image-data"></textarea></div>`,
+        article: (id) => `<div class="item-content-wrapper"><div><label for="art-title-${id}" class="block text-sm font-medium text-secondary mb-1">Title</label><input type="text" id="art-title-${id}" name="article-title" class="w-full p-2 border rounded-md mb-2 article-title"></div><div><label for="art-url-${id}" class="block text-sm font-medium text-secondary mb-1">URL</label><input type="url" id="art-url-${id}" name="article-url" class="w-full p-2 border rounded-md mb-2 article-url"></div></div>`,
+        timelineEvent: (id) => `<div class="item-content-wrapper"><div><label for="timeline-date-${id}" class="block text-sm font-medium text-secondary mb-1">Date</label><input type="date" id="timeline-date-${id}" name="timeline-date" class="w-full p-2 border rounded-md timeline-date"></div><div><label for="timeline-desc-${id}" class="block text-sm font-medium text-secondary mb-1">Description</label><input type="text" id="timeline-desc-${id}" name="timeline-description" placeholder="e.g., Court Hearing" class="w-full p-2 border rounded-md timeline-description"></div></div>`,
+        generic: (id) => `<div class="item-content-wrapper"><div><label for="generic-text-${id}" class="block text-sm font-medium text-secondary mb-1">Content</label><textarea id="generic-text-${id}" name="generic-text" rows="3" class="w-full p-2 border rounded-md generic-text"></textarea></div></div>`
+    };
 
-    // --- Initial Load ---
+    function addDynamicItem(container, itemType, options = {}) {
+        const { suppressSideEffects = false } = options;
+        if (!container || !itemType || !itemTemplates[itemType]) return null;
+        
+        const uniqueId = `${itemType}-${Date.now()}`;
+        const div = document.createElement('div');
+        div.className = 'dynamic-item';
+        div.innerHTML = `<div class="item-controls"><button class="control-btn up-btn" aria-label="Move item up">▲</button><button class="control-btn down-btn" aria-label="Move item down">▼</button><button class="control-btn remove-btn" aria-label="Remove item">X</button></div>${itemTemplates[itemType](uniqueId)}`;
+        
+        const emptyState = container.querySelector('.empty-state');
+        if (emptyState) emptyState.style.display = 'none';
+        
+        container.appendChild(div);
+
+        if (!suppressSideEffects) {
+            updateItemControls(container);
+            debouncedUpdatePreview();
+            startAutosave();
+        }
+        return div;
+    }
+
+    // --- Initial Load & Event Listener Setup ---
     function initialize() {
+        // --- Set Theme ---
         const savedTheme = localStorage.getItem(THEME_KEY);
         if (savedTheme === 'dark') {
             themeToggle.checked = true;
@@ -1566,9 +1381,207 @@ Points of concern:
             document.documentElement.classList.remove('dark');
         }
         
+        // --- Load Categories ---
         appCategories = getFromStorage(CATEGORIES_KEY) || defaultCategories;
         saveToStorage(CATEGORIES_KEY, appCategories); // Ensure it's saved if it was null
 
+        // --- Attach PERSISTENT Event Listeners (using delegation where possible) ---
+        
+        // Main Form Column Input
+        formColumn.addEventListener('input', (e) => {
+            if (e.target.closest('.form-section')) {
+                debouncedUpdatePreview();
+                startAutosave();
+            }
+        });
+        
+        // Sticky Header Scroll Effect
+        formColumn.addEventListener('scroll', () => {
+            stickyHeader.classList.toggle('scrolled', formColumn.scrollTop > 0);
+        });
+
+        // Dynamic Form Container (handles adding/removing/moving items, AI buttons, etc.)
+        dynamicFormContainer.addEventListener('click', (e) => {
+            const target = e.target;
+            const currentTarget = e.currentTarget;
+
+            // Item Controls (Move up/down, remove)
+            if (target.closest('.control-btn')) {
+                const button = target.closest('.control-btn');
+                const item = button.closest('.dynamic-item');
+                const container = item.parentElement;
+                if (button.getAttribute('aria-label') === 'Remove item') {
+                    item.remove();
+                } else if (button.getAttribute('aria-label') === 'Move item up') {
+                    const prevSibling = item.previousElementSibling;
+                    if (prevSibling) container.insertBefore(item, prevSibling);
+                } else if (button.getAttribute('aria-label') === 'Move item down') {
+                    const nextSibling = item.nextElementSibling;
+                    if (nextSibling) container.insertBefore(nextSibling, item);
+                }
+                updateItemControls(container);
+                debouncedUpdatePreview();
+                startAutosave();
+            }
+            // Add Dynamic Item Button
+            else if (target.matches('.add-dynamic-item-btn')) {
+                const container = document.getElementById(target.dataset.containerId);
+                addDynamicItem(container, target.dataset.itemType);
+            }
+            // AI Suggest Hashtags
+            else if (target.dataset.aiAction === 'suggest') {
+                const element = document.getElementById('hashtags');
+                handleAIAssist('suggest', element, target);
+            }
+            // AI Rewrite Dropdown Toggle
+            else if (target.closest('[data-field-id]')) {
+                 e.stopPropagation();
+                 target.closest('.dropdown').classList.toggle('show');
+            }
+            // AI Rewrite Style Selection
+            else if (target.closest('[data-rewrite-style]')) {
+                e.preventDefault();
+                const link = target.closest('[data-rewrite-style]');
+                const style = link.dataset.rewriteStyle;
+                const dropdown = link.closest('.dropdown');
+                const button = dropdown.querySelector('button');
+                const fieldId = button.dataset.fieldId;
+                const element = document.getElementById(fieldId);
+                handleAIAssist(style, element, button);
+                dropdown.classList.remove('show');
+            }
+            // Section Header Toggle
+            else if (target.closest('.form-section-header')) {
+                const header = target.closest('.form-section-header');
+                const content = document.getElementById(header.getAttribute('aria-controls'));
+                const icon = header.querySelector('.chevron-icon');
+                const isExpanded = header.getAttribute('aria-expanded') === 'true';
+                header.setAttribute('aria-expanded', !isExpanded);
+                header.classList.toggle('collapsed');
+                content.classList.toggle('collapsed');
+                icon.classList.toggle('collapsed');
+            }
+        });
+        
+        // Image Upload
+        dynamicFormContainer.addEventListener('change', (e) => {
+             if (e.target.classList.contains('evidence-image-upload')) {
+                handleImageUpload(e);
+            }
+        });
+
+        // Redaction
+        preview.addEventListener('mouseup', (e) => {
+            const selection = window.getSelection();
+            const selectedText = selection.toString().trim();
+            
+            if (selectedText.length > 0) {
+                textToRedact = selectedText;
+                const range = selection.getRangeAt(0);
+                const rangeRect = range.getBoundingClientRect();
+                const previewRect = preview.getBoundingClientRect();
+
+                // Calculate position relative to the preview pane, accounting for scroll
+                const top = rangeRect.top - previewRect.top + preview.scrollTop - 35; // 35px is button height offset
+                const left = rangeRect.left - previewRect.left + preview.scrollLeft;
+
+                redactBtn.style.top = `${top}px`;
+                redactBtn.style.left = `${left}px`;
+                redactBtn.style.display = 'block';
+                redactBtn.style.position = 'absolute'; // Ensure it's positioned relative to its offset parent
+            } else {
+                redactBtn.style.display = 'none';
+            }
+        });
+
+        redactBtn.addEventListener('click', async () => {
+            if (!textToRedact) return;
+            if (await showConfirmation(`Are you sure you want to redact "${textToRedact}"? This cannot be easily undone.`)) {
+                let redacted = false;
+                const allInputs = dynamicFormContainer.querySelectorAll('input, textarea');
+                for (const input of allInputs) {
+                    if (input.value.includes(textToRedact)) {
+                        input.value = input.value.replace(new RegExp(textToRedact, 'g'), '[REDACTED]');
+                        input.dispatchEvent(new Event('input', { bubbles: true })); // Trigger update
+                        redacted = true;
+                    }
+                }
+                if (redacted) {
+                    showToast('Text redacted.', 'success');
+                } else {
+                    showToast('Could not find the selected text in the form.', 'error');
+                }
+            }
+            redactBtn.style.display = 'none';
+            textToRedact = '';
+        });
+
+        // Global Click Listener (for closing dropdowns, etc.)
+        document.addEventListener('click', (e) => {
+            if (!exportBtn.parentElement.contains(e.target)) {
+                exportBtn.parentElement.classList.remove('show');
+            }
+            if (!redactBtn.contains(e.target) && !preview.contains(e.target)) {
+                 redactBtn.style.display = 'none';
+            }
+            document.querySelectorAll('.dropdown.show').forEach(dropdown => {
+                if (!dropdown.contains(e.target)) {
+                    dropdown.classList.remove('show');
+                }
+            });
+        });
+
+        // --- Top-level Controls ---
+        themeToggle.addEventListener('change', toggleTheme);
+        platformSelect.addEventListener('change', updatePreview);
+        document.getElementById('newPost').addEventListener('click', confirmAndClearForm);
+        document.getElementById('loadPosts').addEventListener('click', openLoadModal);
+        document.getElementById('loadTemplate').addEventListener('click', openTemplatesModal);
+        document.getElementById('manageCategoriesBtn').addEventListener('click', openCategoryManager);
+        document.getElementById('saveOrUpdate').addEventListener('click', saveOrUpdatePost);
+        document.getElementById('saveAsNew').addEventListener('click', () => saveNewPost(true));
+        document.getElementById('copyButton').addEventListener('click', copyToClipboard);
+        exportBtn.addEventListener('click', (e) => { e.stopPropagation(); exportBtn.parentElement.classList.toggle('show'); });
+        document.getElementById('exportTxt').addEventListener('click', (e) => { e.preventDefault(); exportAsTxt(); });
+        document.getElementById('exportMd').addEventListener('click', (e) => { e.preventDefault(); exportAsMd(); });
+        document.getElementById('exportPdf').addEventListener('click', (e) => { e.preventDefault(); exportAsPdf(); });
+        document.getElementById('selectiveExportBtn').addEventListener('click', (e) => { e.preventDefault(); openSelectiveExportModal(); });
+        document.getElementById('aiReviewBtn').addEventListener('click', runSanityCheck);
+        document.getElementById('fetchArticleBtn').addEventListener('click', handleArticleExtraction);
+        
+        // --- Modal-specific Listeners ---
+        Object.keys(closeButtons).forEach(key => {
+            if(closeButtons[key]) closeButtons[key].addEventListener('click', () => closeModal(modals[key]));
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                Object.values(modals).forEach(modal => {
+                    if (modal && modal.style.display === 'flex' && modal.id !== 'confirmModal') {
+                        closeModal(modal);
+                    }
+                });
+            }
+        });
+        
+        postSearchInput.addEventListener('input', openLoadModal);
+        lists.savedPosts.addEventListener('click', handleModalListClick);
+        lists.templates.addEventListener('click', handleTemplateModalClick);
+        lists.history.addEventListener('click', handleHistoryModalClick);
+        lists.categories.addEventListener('click', handleCategoryManagerClick);
+
+        document.getElementById('exportPostsBtn').addEventListener('click', exportPosts);
+        document.getElementById('importPostsBtn').addEventListener('click', () => importFileInput.click());
+        importFileInput.addEventListener('change', handleImport);
+        document.getElementById('saveAsTemplateBtn').addEventListener('click', saveCurrentAsTemplate);
+        document.getElementById('addNewCategoryBtn').addEventListener('click', addNewCategory);
+        document.getElementById('saveCategoryChangesBtn').addEventListener('click', saveCategoryChanges);
+        document.getElementById('performSelectiveExportBtn').addEventListener('click', () => {
+            const selectedCategories = Array.from(document.querySelectorAll('.selective-export-checkbox:checked')).map(cb => cb.value);
+            exportAsMd(selectedCategories); 
+            closeModal(modals.selectiveExport);
+        });
+
+        // --- Final Setup ---
         renderForm();
         loadAutosavedDraft();
     }
