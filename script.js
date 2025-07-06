@@ -108,10 +108,9 @@
             const allInputs = dynamicFormContainer.querySelectorAll('input, textarea');
             for (const input of allInputs) {
                 if (input.value.includes(textToRedact)) {
-                    input.value = input.value.replace(textToRedact, '[REDACTED]');
+                    input.value = input.value.replace(new RegExp(textToRedact, 'g'), '[REDACTED]');
                     input.dispatchEvent(new Event('input', { bubbles: true })); // Trigger update
                     redacted = true;
-                    break; // Only redact the first instance found
                 }
             }
             if (redacted) {
@@ -126,10 +125,10 @@
     });
 
     document.addEventListener('click', (e) => {
-        if (!exportBtn.contains(e.target) && !e.target.closest('.dropdown-content')) {
-            document.querySelectorAll('.dropdown.show').forEach(d => d.classList.remove('show'));
+        if (!exportBtn.parentElement.contains(e.target)) {
+            exportBtn.parentElement.classList.remove('show');
         }
-        if (e.target !== redactBtn && e.target !== preview && !preview.contains(e.target)) {
+        if (!redactBtn.contains(e.target) && !preview.contains(e.target)) {
              redactBtn.style.display = 'none';
         }
     });
@@ -170,10 +169,10 @@
     document.getElementById('saveOrUpdate').addEventListener('click', saveOrUpdatePost);
     document.getElementById('saveAsNew').addEventListener('click', () => saveNewPost(true));
     document.getElementById('copyButton').addEventListener('click', copyToClipboard);
-    document.getElementById('exportTxt').addEventListener('click', exportAsTxt);
-    document.getElementById('exportMd').addEventListener('click', exportAsMd);
-    document.getElementById('exportPdf').addEventListener('click', exportAsPdf);
-    document.getElementById('selectiveExportBtn').addEventListener('click', openSelectiveExportModal);
+    document.getElementById('exportTxt').addEventListener('click', (e) => { e.preventDefault(); exportAsTxt(); });
+    document.getElementById('exportMd').addEventListener('click', (e) => { e.preventDefault(); exportAsMd(); });
+    document.getElementById('exportPdf').addEventListener('click', (e) => { e.preventDefault(); exportAsPdf(); });
+    document.getElementById('selectiveExportBtn').addEventListener('click', (e) => { e.preventDefault(); openSelectiveExportModal(); });
     document.getElementById('exportPostsBtn').addEventListener('click', exportPosts);
     document.getElementById('importPostsBtn').addEventListener('click', () => importFileInput.click());
     importFileInput.addEventListener('change', handleImport);
@@ -1127,7 +1126,7 @@
                 const fieldsHtml = category.fields.map(field => {
                     let aiButtonHtml = '';
                     if (field.aiAction === 'suggest') {
-                        aiButtonHtml = `<button id="${field.aiAction}Btn" class="ai-btn action-btn text-xs bg-purple-600 hover:bg-purple-700 text-white font-bold py-1 px-2 rounded-lg shadow">
+                        aiButtonHtml = `<button id="suggestHashtagsBtn" class="ai-btn action-btn text-xs bg-purple-600 hover:bg-purple-700 text-white font-bold py-1 px-2 rounded-lg shadow">
                             <span class="btn-text">✨ Suggest</span><span class="spinner">🌀</span>
                         </button>`;
                     } else if (field.aiAction === 'rewrite') {
@@ -1174,6 +1173,7 @@
 
         // --- Initialize SortableJS for Drag-and-Drop ---
         document.querySelectorAll('[id^="dynamic-container-"]').forEach(container => {
+            addEmptyStateMessage(container);
             new Sortable(container, {
                 animation: 150,
                 ghostClass: 'sortable-ghost',
@@ -1196,7 +1196,7 @@
                 addDynamicItem(container, e.currentTarget.dataset.itemType);
             });
         });
-        document.getElementById('suggestBtn')?.addEventListener('click', (e) => {
+        document.getElementById('suggestHashtagsBtn')?.addEventListener('click', (e) => {
             const element = document.getElementById('hashtags');
             handleAIAssist('suggest', element, e.currentTarget);
         });
@@ -1220,8 +1220,12 @@
         });
 
         dynamicFormContainer.addEventListener('click', (e) => {
-            handleDynamicItemControls(e);
-            if (e.target.classList.contains('evidence-image-upload')) {
+            if (e.target.closest('.control-btn')) {
+                handleDynamicItemControls(e);
+            }
+        });
+        dynamicFormContainer.addEventListener('change', (e) => {
+             if (e.target.classList.contains('evidence-image-upload')) {
                 handleImageUpload(e);
             }
         });
@@ -1286,12 +1290,8 @@
             title: title,
             emoji: '🆕',
             type: 'dynamic', // Default to dynamic
-            itemType: 'generic' // A new generic template might be needed
+            itemType: 'generic'
         };
-        // For simplicity, new categories are dynamic. A more complex UI could allow choosing the type.
-        if (!itemTemplates.generic) {
-            itemTemplates.generic = (id) => `<div><label for="generic-text-${id}" class="block text-sm font-medium text-secondary mb-1">Content</label><textarea id="generic-text-${id}" name="generic-text" rows="3" class="w-full p-2 border rounded-md generic-text"></textarea></div>`;
-        }
         appCategories.push(newCategory);
         renderCategoryList();
     }
@@ -1312,9 +1312,9 @@
         });
         appCategories = updatedCategories;
         saveToStorage(CATEGORIES_KEY, appCategories);
-        renderForm();
         closeModal(modals.categoryManager);
-        showToast('Categories updated!', 'success');
+        showToast('Categories updated! Reloading form...', 'success');
+        setTimeout(renderForm, 100); // give modal time to close
     }
 
     async function handleArticleExtraction() {
@@ -1540,7 +1540,7 @@ Points of concern:
             const suggestions = await callGeminiAPI(prompt);
             resultContainer.innerHTML = `
                 <p class="text-secondary mb-4">Here are a few suggestions to improve the post:</p>
-                <ul class="text-primary space-y-3">
+                <ul class="text-primary space-y-3 list-disc pl-5">
                     ${suggestions.replace(/^\* /gm, '<li>').replace(/$/gm, '</li>')}
                 </ul>
             `;
@@ -1575,3 +1575,4 @@ Points of concern:
     
     document.addEventListener('DOMContentLoaded', initialize);
 })(); // End IIFE
+
