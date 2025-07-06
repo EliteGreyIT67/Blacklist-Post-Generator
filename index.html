@@ -1110,8 +1110,8 @@
 
         // --- Gemini AI Functions ---
         function getApiKey() {
-            const apiKey = "YOUR_GEMINI_API_KEY"; // This will be replaced by GitHub Actions
-            if (apiKey === "YOUR_GEMINI_API_KEY") {
+            const apiKey = "__GEMINI_API_KEY_PLACEHOLDER__"; 
+            if (apiKey.includes("PLACEHOLDER")) {
                 return localStorage.getItem(API_KEY_LS_KEY);
             }
             return apiKey;
@@ -1119,7 +1119,7 @@
         
         function ensureApiKey() {
             const key = getApiKey();
-            if (!key) {
+            if (!key || key.includes("PLACEHOLDER")) {
                 const userKey = prompt("Please enter your Gemini API key for local testing:");
                 if (userKey) {
                     localStorage.setItem(API_KEY_LS_KEY, userKey);
