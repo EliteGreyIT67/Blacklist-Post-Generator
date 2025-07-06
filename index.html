@@ -94,9 +94,9 @@
         .modal-list-item-controls { display: flex; gap: 0.5rem; }
         .modal-control-btn { background: none; border: none; cursor: pointer; font-size: 1.25rem; padding: 0.25rem; }
         .ai-btn { padding: 0.25rem 0.5rem; font-size: 0.875rem; line-height: 1.25rem; }
-        .ai-btn .spinner { display: none; }
-        .ai-btn.loading .spinner { display: inline-block; }
-        .ai-btn.loading .btn-text { display: none; }
+        .ai-btn .spinner, .ai-review-btn .spinner { display: none; }
+        .ai-btn.loading .spinner, .ai-review-btn.loading .spinner { display: inline-block; }
+        .ai-btn.loading .btn-text, .ai-review-btn.loading .btn-text { display: none; }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         .spinner { animation: spin 1s linear infinite; }
         .dropdown { position: relative; display: inline-block; }
@@ -104,6 +104,8 @@
         .dropdown-content a { color: var(--text-primary); padding: 12px 16px; text-decoration: none; display: block; font-size: 0.875rem; }
         .dropdown-content a:hover { background-color: var(--preview-bg); }
         .dropdown.show .dropdown-content { display: block; }
+        .ai-rewrite-menu { min-width: 150px; }
+        .ai-rewrite-menu a { padding: 8px 12px; }
 
         /* Dark Mode Toggle */
         .theme-switch-wrapper { display: flex; align-items: center; gap: 0.5rem; }
@@ -122,6 +124,10 @@
         
         /* Selective Export */
         #selectiveExportCategoryList label { display: flex; align-items: center; gap: 0.5rem; padding: 0.25rem; }
+        
+        /* AI Review Modal */
+        #aiReviewResult ul { list-style-type: disc; padding-left: 1.5rem; }
+        #aiReviewResult li { margin-bottom: 0.75rem; }
     </style>
 </head>
 <body class="text-gray-800">
@@ -196,20 +202,26 @@
                             </div>
                         </div>
                         <div id="preview" class="preview-pane p-4 rounded-md h-96 overflow-y-auto"></div>
-                        <div class="flex gap-2 mt-4">
-                            <button id="copyButton" class="copy-button w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg text-lg shadow-md action-btn">
-                                <span id="copyButtonText">Copy to Clipboard</span>
-                            </button>
-                            <div class="dropdown">
-                                <button id="exportBtn" class="w-full h-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-4 rounded-lg text-lg shadow-md action-btn">Export</button>
-                                <div id="exportDropdown" class="dropdown-content">
-                                    <a href="#" id="exportTxt">as Plain Text (.txt)</a>
-                                    <a href="#" id="exportMd">as Markdown (.md)</a>
-                                    <a href="#" id="exportPdf">as PDF Document</a>
-                                    <hr class="my-1 border-border-color">
-                                    <a href="#" id="selectiveExportBtn">as Selective Export...</a>
+                        <div class="flex flex-col gap-2 mt-4">
+                            <div class="flex gap-2">
+                                <button id="copyButton" class="copy-button w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg text-lg shadow-md action-btn">
+                                    <span id="copyButtonText">Copy to Clipboard</span>
+                                </button>
+                                <div class="dropdown">
+                                    <button id="exportBtn" class="w-full h-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-4 rounded-lg text-lg shadow-md action-btn">Export</button>
+                                    <div id="exportDropdown" class="dropdown-content">
+                                        <a href="#" id="exportTxt">as Plain Text (.txt)</a>
+                                        <a href="#" id="exportMd">as Markdown (.md)</a>
+                                        <a href="#" id="exportPdf">as PDF Document</a>
+                                        <hr class="my-1 border-border-color">
+                                        <a href="#" id="selectiveExportBtn">as Selective Export...</a>
+                                    </div>
                                 </div>
                             </div>
+                            <button id="aiReviewBtn" class="ai-review-btn w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-4 rounded-lg text-lg shadow-md action-btn">
+                                <span class="btn-text">🤖 AI Review</span>
+                                <span class="spinner">🌀</span>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -224,6 +236,7 @@
     <div id="confirmModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="confirmModalTitle"><div class="modal-content"><h2 id="confirmModalTitle" class="text-xl font-bold mb-4 text-headings">Confirm Action</h2><p id="confirmModalText" class="mb-6 text-primary">Are you sure?</p><div class="flex justify-end space-x-4"><button id="confirmCancelBtn" class="action-btn px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-md">Cancel</button><button id="confirmOkBtn" class="action-btn px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md">Confirm</button></div></div></div>
     <div id="categoryManagerModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="categoryManagerModalTitle"><div class="modal-content"><button class="close-button" id="closeCategoryManagerModal" aria-label="Close modal">&times;</button><h2 id="categoryManagerModalTitle" class="text-2xl font-bold mb-4 text-headings">Manage Categories</h2><div id="categoryList" class="space-y-2 max-h-80 overflow-y-auto"></div><div class="mt-6 pt-4 border-t border-border-color flex flex-col gap-2"><button id="addNewCategoryBtn" class="action-btn w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg">Add New Category</button><button id="saveCategoryChangesBtn" class="action-btn w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">Save and Close</button></div></div></div>
     <div id="selectiveExportModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="selectiveExportModalTitle"><div class="modal-content"><button class="close-button" id="closeSelectiveExportModal" aria-label="Close modal">&times;</button><h2 id="selectiveExportModalTitle" class="text-2xl font-bold mb-4 text-headings">Selective Export</h2><p class="text-secondary mb-4">Choose which categories to include in the export.</p><div id="selectiveExportCategoryList" class="space-y-2"></div><div class="mt-6 pt-4 border-t border-border-color flex gap-2"><button id="performSelectiveExportBtn" class="action-btn w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">Export Selected</button></div></div></div>
+    <div id="aiReviewModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="aiReviewModalTitle"><div class="modal-content"><button class="close-button" id="closeAiReviewModal" aria-label="Close modal">&times;</button><h2 id="aiReviewModalTitle" class="text-2xl font-bold mb-4 text-headings">🤖 AI Sanity Check</h2><div id="aiReviewResult" class="text-primary space-y-4"><p class="text-secondary">AI is reviewing your post...</p></div></div></div>
 
     <script>
     document.addEventListener('DOMContentLoaded', () => {
@@ -261,6 +274,7 @@
             confirm: document.getElementById('confirmModal'),
             categoryManager: document.getElementById('categoryManagerModal'),
             selectiveExport: document.getElementById('selectiveExportModal'),
+            aiReview: document.getElementById('aiReviewModal'),
         };
 
         const closeButtons = {
@@ -269,6 +283,7 @@
             history: document.getElementById('closeHistoryModal'),
             categoryManager: document.getElementById('closeCategoryManagerModal'),
             selectiveExport: document.getElementById('closeSelectiveExportModal'),
+            aiReview: document.getElementById('closeAiReviewModal'),
         };
 
         const lists = {
@@ -306,14 +321,14 @@
             exportBtn.parentElement.classList.toggle('show');
         });
         document.addEventListener('click', (e) => {
-            if (!exportBtn.contains(e.target)) {
-                exportBtn.parentElement.classList.remove('show');
+            if (!exportBtn.contains(e.target) && !e.target.closest('.dropdown-content')) {
+                document.querySelectorAll('.dropdown.show').forEach(d => d.classList.remove('show'));
             }
         });
 
         // --- Modal Listeners ---
         Object.keys(closeButtons).forEach(key => {
-            closeButtons[key].addEventListener('click', () => closeModal(modals[key]));
+            if(closeButtons[key]) closeButtons[key].addEventListener('click', () => closeModal(modals[key]));
         });
         
         function handleConfirm(isConfirmed) {
@@ -331,7 +346,7 @@
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 Object.values(modals).forEach(modal => {
-                    if (modal.style.display === 'flex') {
+                    if (modal && modal.style.display === 'flex') {
                         if (modal === modals.confirm) handleConfirm(false);
                         else closeModal(modal);
                     }
@@ -358,6 +373,7 @@
         document.getElementById('addNewCategoryBtn').addEventListener('click', addNewCategory);
         document.getElementById('saveCategoryChangesBtn').addEventListener('click', saveCategoryChanges);
         document.getElementById('fetchArticleBtn').addEventListener('click', handleArticleExtraction);
+        document.getElementById('aiReviewBtn').addEventListener('click', runSanityCheck);
         
         function handleDynamicItemControls(e) {
             const button = e.target.closest('.control-btn');
@@ -391,16 +407,16 @@
 
         // --- Dynamic Item Management ---
         const itemTemplates = {
-            individual: (id) => `<div class="flex gap-4"><img class="image-preview" id="img-preview-${id}" src="https://placehold.co/64x64/f8fafc/cbd5e1?text=🖼️" onerror="this.onerror=null;this.src='https://placehold.co/64x64/f8fafc/cbd5e1?text=❌';"><div class="flex-grow"><label for="individual-img-${id}" class="block text-sm font-medium text-secondary mb-1">Image URL</label><input type="url" id="individual-img-${id}" class="w-full p-2 border rounded-md mb-2 individual-image-url" oninput="document.getElementById('img-preview-${id}').src=this.value || 'https://placehold.co/64x64/f8fafc/cbd5e1?text=🖼️'"></div></div><div><label for="individual-name-${id}" class="block text-sm font-medium text-secondary mb-1">Full Name</label><input type="text" id="individual-name-${id}" class="w-full p-2 border rounded-md mb-2 individual-name"></div><div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-2"><div><label for="individual-dob-${id}" class="block text-sm font-medium text-secondary mb-1">Date of Birth</label><input type="text" id="individual-dob-${id}" class="w-full p-2 border rounded-md individual-dob"></div><div><label for="individual-phone-${id}" class="block text-sm font-medium text-secondary mb-1">Phone Number</label><input type="tel" id="individual-phone-${id}" class="w-full p-2 border rounded-md individual-phone"></div></div><div><label for="individual-email-${id}" class="block text-sm font-medium text-secondary mb-1">Email Address</label><input type="email" id="individual-email-${id}" class="w-full p-2 border rounded-md mb-2 individual-email"></div><div><label for="individual-address-${id}" class="block text-sm font-medium text-secondary mb-1">Last Known Address</label><textarea id="individual-address-${id}" rows="2" class="w-full p-2 border rounded-md mb-2 individual-address"></textarea></div><h4 class="font-semibold text-sm mt-3 mb-1 text-gray-600 dark:text-gray-400">Social Media Links</h4><div class="space-y-2"><input type="url" placeholder="Facebook URL" class="w-full p-2 border rounded-md individual-fb-link" aria-label="Individual Facebook URL"><input type="url" placeholder="Instagram URL" class="w-full p-2 border rounded-md individual-ig-link" aria-label="Individual Instagram URL"><input type="url" placeholder="X (Twitter) URL" class="w-full p-2 border rounded-md individual-x-link" aria-label="Individual X (Twitter) URL"><input type="text" placeholder="Other URLs (comma-sep)" class="w-full p-2 border rounded-md individual-other-links" aria-label="Individual Other URLs"></div>`,
-            alias: (id) => `<div><label for="alias-name-${id}" class="block text-sm font-medium text-secondary mb-1">Alias Name</label><input type="text" id="alias-name-${id}" class="w-full p-2 border rounded-md alias-name"></div>`,
-            organization: (id) => `<div><label for="org-name-${id}" class="block text-sm font-medium text-secondary mb-1">Organization Name</label><input type="text" id="org-name-${id}" class="w-full p-2 border rounded-md mb-2 org-name"></div><div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-2"><div><label for="org-ein-${id}" class="block text-sm font-medium text-secondary mb-1">EIN</label><input type="text" id="org-ein-${id}" class="w-full p-2 border rounded-md org-ein"></div><div><label for="org-license-${id}" class="block text-sm font-medium text-secondary mb-1">License #</label><input type="text" id="org-license-${id}" class="w-full p-2 border rounded-md org-license"></div></div><div><label for="org-record-${id}" class="block text-sm font-medium text-secondary mb-1">Official Record Link</label><input type="url" id="org-record-${id}" class="w-full p-2 border rounded-md mb-2 org-record-link"></div><div><label for="org-status-${id}" class="block text-sm font-medium text-secondary mb-1">Status</label><input type="text" id="org-status-${id}" placeholder="e.g., Active, CLOSED" class="w-full p-2 border rounded-md mb-2 org-status"></div><h4 class="font-semibold text-sm mt-3 mb-1 text-gray-600 dark:text-gray-400">Links</h4><div class="grid grid-cols-1 md:grid-cols-2 gap-2"><input type="url" placeholder="Facebook URL" class="w-full p-2 border rounded-md org-fb-link" aria-label="Organization Facebook URL"><input type="url" placeholder="Instagram URL" class="w-full p-2 border rounded-md org-ig-link" aria-label="Organization Instagram URL"><input type="url" placeholder="X (Twitter) URL" class="w-full p-2 border rounded-md org-x-link" aria-label="Organization X (Twitter) URL"><input type="url" placeholder="Website URL" class="w-full p-2 border rounded-md org-website-link" aria-label="Organization Website URL"></div><div class="mt-2"><input type="text" placeholder="Other URLs (comma-sep)" class="w-full p-2 border rounded-md org-other-links" aria-label="Organization Other URLs"></div>`,
-            legalRegistration: (id) => `<div><label for="legal-title-${id}" class="block text-sm font-medium text-secondary mb-1">Document Title</label><input type="text" id="legal-title-${id}" class="w-full p-2 border rounded-md mb-2 legal-registration-title"></div><div><label for="legal-url-${id}" class="block text-sm font-medium text-secondary mb-1">URL</label><input type="url" id="legal-url-${id}" class="w-full p-2 border rounded-md mb-2 legal-registration-url"></div>`,
-            fraudulentSolicitation: (id) => `<div><label for="fraud-text-${id}" class="block text-sm font-medium text-secondary mb-1">Allegation Details</label><textarea id="fraud-text-${id}" rows="3" class="w-full p-2 border rounded-md fraudulent-solicitation-text"></textarea></div>`,
-            warningAndAccount: (id) => `<div><label for="warning-text-${id}" class="block text-sm font-medium text-secondary mb-1">Account/Warning Details</label><textarea id="warning-text-${id}" rows="3" class="w-full p-2 border rounded-md warning-account-text"></textarea></div>`,
-            investigation: (id) => `<div><label for="inv-title-${id}" class="block text-sm font-medium text-secondary mb-1">Title</label><input type="text" id="inv-title-${id}" class="w-full p-2 border rounded-md mb-2 investigation-title"></div><div><label for="inv-url-${id}" class="block text-sm font-medium text-secondary mb-1">URL</label><input type="url" id="inv-url-${id}" class="w-full p-2 border rounded-md mb-2 investigation-url"></div>`,
-            evidence: (id) => `<div class="flex gap-4"><img class="image-preview" id="img-preview-${id}" src="https://placehold.co/64x64/f8fafc/cbd5e1?text=🖼️" onerror="this.onerror=null;this.src='https://placehold.co/64x64/f8fafc/cbd5e1?text=❌';"><div class="flex-grow"><label for="evidence-img-${id}" class="block text-sm font-medium text-secondary mb-1">Upload Image</label><input type="file" id="evidence-img-${id}" class="w-full p-1 border rounded-md mb-2 evidence-image-upload" accept="image/*" data-preview-id="img-preview-${id}"></div></div><div><label for="evidence-title-${id}" class="block text-sm font-medium text-secondary mb-1">Title</label><input type="text" id="evidence-title-${id}" class="w-full p-2 border rounded-md mb-2 evidence-title"></div><div><label for="evidence-desc-${id}" class="block text-sm font-medium text-secondary mb-1">Description</label><textarea id="evidence-desc-${id}" rows="3" class="w-full p-2 border rounded-md mb-2 evidence-description"></textarea></div><div class="grid grid-cols-1 md:grid-cols-2 gap-2"><div><label for="evidence-url-${id}" class="block text-sm font-medium text-secondary mb-1">Source URL</label><input type="url" id="evidence-url-${id}" class="w-full p-2 border rounded-md evidence-url"></div><div><label for="evidence-date-${id}" class="block text-sm font-medium text-secondary mb-1">Date (Optional)</label><input type="date" id="evidence-date-${id}" class="w-full p-2 border rounded-md evidence-date"></div></div><textarea id="evidence-img-data-${id}" class="hidden evidence-image-data"></textarea>`,
-            article: (id) => `<div><label for="art-title-${id}" class="block text-sm font-medium text-secondary mb-1">Title</label><input type="text" id="art-title-${id}" class="w-full p-2 border rounded-md mb-2 article-title"></div><div><label for="art-url-${id}" class="block text-sm font-medium text-secondary mb-1">URL</label><input type="url" id="art-url-${id}" class="w-full p-2 border rounded-md mb-2 article-url"></div>`,
-            timelineEvent: (id) => `<div><label for="timeline-date-${id}" class="block text-sm font-medium text-secondary mb-1">Date</label><input type="date" id="timeline-date-${id}" class="w-full p-2 border rounded-md timeline-date"></div><div><label for="timeline-desc-${id}" class="block text-sm font-medium text-secondary mb-1">Description</label><input type="text" id="timeline-desc-${id}" placeholder="e.g., Court Hearing" class="w-full p-2 border rounded-md timeline-description"></div>`
+            individual: (id) => `<div class="flex gap-4"><img class="image-preview" id="img-preview-${id}" src="https://placehold.co/64x64/f8fafc/cbd5e1?text=🖼️" onerror="this.onerror=null;this.src='https://placehold.co/64x64/f8fafc/cbd5e1?text=❌';"><div class="flex-grow"><label for="individual-img-${id}" class="block text-sm font-medium text-secondary mb-1">Image URL</label><input type="url" id="individual-img-${id}" name="individual-image-url" class="w-full p-2 border rounded-md mb-2 individual-image-url" oninput="this.closest('.dynamic-item').querySelector('.image-preview').src=this.value || 'https://placehold.co/64x64/f8fafc/cbd5e1?text=🖼️'"></div></div><div><label for="individual-name-${id}" class="block text-sm font-medium text-secondary mb-1">Full Name</label><input type="text" id="individual-name-${id}" name="individual-name" class="w-full p-2 border rounded-md mb-2 individual-name"></div><div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-2"><div><label for="individual-dob-${id}" class="block text-sm font-medium text-secondary mb-1">Date of Birth</label><input type="text" id="individual-dob-${id}" name="individual-dob" class="w-full p-2 border rounded-md individual-dob"></div><div><label for="individual-phone-${id}" class="block text-sm font-medium text-secondary mb-1">Phone Number</label><input type="tel" id="individual-phone-${id}" name="individual-phone" class="w-full p-2 border rounded-md individual-phone"></div></div><div><label for="individual-email-${id}" class="block text-sm font-medium text-secondary mb-1">Email Address</label><input type="email" id="individual-email-${id}" name="individual-email" class="w-full p-2 border rounded-md mb-2 individual-email"></div><div><label for="individual-address-${id}" class="block text-sm font-medium text-secondary mb-1">Last Known Address</label><textarea id="individual-address-${id}" name="individual-address" rows="2" class="w-full p-2 border rounded-md mb-2 individual-address"></textarea></div><h4 class="font-semibold text-sm mt-3 mb-1 text-gray-600 dark:text-gray-400">Social Media Links</h4><div class="space-y-2"><input type="url" placeholder="Facebook URL" name="individual-fb-link" class="w-full p-2 border rounded-md individual-fb-link" aria-label="Individual Facebook URL"><input type="url" placeholder="Instagram URL" name="individual-ig-link" class="w-full p-2 border rounded-md individual-ig-link" aria-label="Individual Instagram URL"><input type="url" placeholder="X (Twitter) URL" name="individual-x-link" class="w-full p-2 border rounded-md individual-x-link" aria-label="Individual X (Twitter) URL"><input type="text" placeholder="Other URLs (comma-sep)" name="individual-other-links" class="w-full p-2 border rounded-md individual-other-links" aria-label="Individual Other URLs"></div>`,
+            alias: (id) => `<div><label for="alias-name-${id}" class="block text-sm font-medium text-secondary mb-1">Alias Name</label><input type="text" id="alias-name-${id}" name="alias-name" class="w-full p-2 border rounded-md alias-name"></div>`,
+            organization: (id) => `<div><label for="org-name-${id}" class="block text-sm font-medium text-secondary mb-1">Organization Name</label><input type="text" id="org-name-${id}" name="org-name" class="w-full p-2 border rounded-md mb-2 org-name"></div><div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-2"><div><label for="org-ein-${id}" class="block text-sm font-medium text-secondary mb-1">EIN</label><input type="text" id="org-ein-${id}" name="org-ein" class="w-full p-2 border rounded-md org-ein"></div><div><label for="org-license-${id}" class="block text-sm font-medium text-secondary mb-1">License #</label><input type="text" id="org-license-${id}" name="org-license" class="w-full p-2 border rounded-md org-license"></div></div><div><label for="org-record-${id}" class="block text-sm font-medium text-secondary mb-1">Official Record Link</label><input type="url" id="org-record-${id}" name="org-record-link" class="w-full p-2 border rounded-md mb-2 org-record-link"></div><div><label for="org-status-${id}" class="block text-sm font-medium text-secondary mb-1">Status</label><input type="text" id="org-status-${id}" name="org-status" placeholder="e.g., Active, CLOSED" class="w-full p-2 border rounded-md mb-2 org-status"></div><h4 class="font-semibold text-sm mt-3 mb-1 text-gray-600 dark:text-gray-400">Links</h4><div class="grid grid-cols-1 md:grid-cols-2 gap-2"><input type="url" placeholder="Facebook URL" name="org-fb-link" class="w-full p-2 border rounded-md org-fb-link" aria-label="Organization Facebook URL"><input type="url" placeholder="Instagram URL" name="org-ig-link" class="w-full p-2 border rounded-md org-ig-link" aria-label="Organization Instagram URL"><input type="url" placeholder="X (Twitter) URL" name="org-x-link" class="w-full p-2 border rounded-md org-x-link" aria-label="Organization X (Twitter) URL"><input type="url" placeholder="Website URL" name="org-website-link" class="w-full p-2 border rounded-md org-website-link" aria-label="Organization Website URL"></div><div class="mt-2"><input type="text" placeholder="Other URLs (comma-sep)" name="org-other-links" class="w-full p-2 border rounded-md org-other-links" aria-label="Organization Other URLs"></div>`,
+            legalRegistration: (id) => `<div><label for="legal-title-${id}" class="block text-sm font-medium text-secondary mb-1">Document Title</label><input type="text" id="legal-title-${id}" name="legal-registration-title" class="w-full p-2 border rounded-md mb-2 legal-registration-title"></div><div><label for="legal-url-${id}" class="block text-sm font-medium text-secondary mb-1">URL</label><input type="url" id="legal-url-${id}" name="legal-registration-url" class="w-full p-2 border rounded-md mb-2 legal-registration-url"></div>`,
+            fraudulentSolicitation: (id) => `<div><label for="fraud-text-${id}" class="block text-sm font-medium text-secondary mb-1">Allegation Details</label><textarea id="fraud-text-${id}" name="fraudulent-solicitation-text" rows="3" class="w-full p-2 border rounded-md fraudulent-solicitation-text"></textarea></div>`,
+            warningAndAccount: (id) => `<div><label for="warning-text-${id}" class="block text-sm font-medium text-secondary mb-1">Account/Warning Details</label><textarea id="warning-text-${id}" name="warning-account-text" rows="3" class="w-full p-2 border rounded-md warning-account-text"></textarea></div>`,
+            investigation: (id) => `<div><label for="inv-title-${id}" class="block text-sm font-medium text-secondary mb-1">Title</label><input type="text" id="inv-title-${id}" name="investigation-title" class="w-full p-2 border rounded-md mb-2 investigation-title"></div><div><label for="inv-url-${id}" class="block text-sm font-medium text-secondary mb-1">URL</label><input type="url" id="inv-url-${id}" name="investigation-url" class="w-full p-2 border rounded-md mb-2 investigation-url"></div>`,
+            evidence: (id) => `<div class="flex gap-4"><img class="image-preview" id="img-preview-${id}" src="https://placehold.co/64x64/f8fafc/cbd5e1?text=🖼️" onerror="this.onerror=null;this.src='https://placehold.co/64x64/f8fafc/cbd5e1?text=❌';"><div class="flex-grow"><label for="evidence-img-${id}" class="block text-sm font-medium text-secondary mb-1">Upload Image</label><input type="file" id="evidence-img-${id}" class="w-full p-1 border rounded-md mb-2 evidence-image-upload" accept="image/*" data-preview-id="img-preview-${id}"></div></div><div><label for="evidence-title-${id}" class="block text-sm font-medium text-secondary mb-1">Title</label><input type="text" id="evidence-title-${id}" name="evidence-title" class="w-full p-2 border rounded-md mb-2 evidence-title"></div><div><label for="evidence-desc-${id}" class="block text-sm font-medium text-secondary mb-1">Description</label><textarea id="evidence-desc-${id}" name="evidence-description" rows="3" class="w-full p-2 border rounded-md mb-2 evidence-description"></textarea></div><div class="grid grid-cols-1 md:grid-cols-2 gap-2"><div><label for="evidence-url-${id}" class="block text-sm font-medium text-secondary mb-1">Source URL</label><input type="url" id="evidence-url-${id}" name="evidence-url" class="w-full p-2 border rounded-md evidence-url"></div><div><label for="evidence-date-${id}" class="block text-sm font-medium text-secondary mb-1">Date (Optional)</label><input type="date" id="evidence-date-${id}" name="evidence-date" class="w-full p-2 border rounded-md evidence-date"></div></div><textarea id="evidence-img-data-${id}" name="evidence-image-data" class="hidden evidence-image-data"></textarea>`,
+            article: (id) => `<div><label for="art-title-${id}" class="block text-sm font-medium text-secondary mb-1">Title</label><input type="text" id="art-title-${id}" name="article-title" class="w-full p-2 border rounded-md mb-2 article-title"></div><div><label for="art-url-${id}" class="block text-sm font-medium text-secondary mb-1">URL</label><input type="url" id="art-url-${id}" name="article-url" class="w-full p-2 border rounded-md mb-2 article-url"></div>`,
+            timelineEvent: (id) => `<div><label for="timeline-date-${id}" class="block text-sm font-medium text-secondary mb-1">Date</label><input type="date" id="timeline-date-${id}" name="timeline-date" class="w-full p-2 border rounded-md timeline-date"></div><div><label for="timeline-desc-${id}" class="block text-sm font-medium text-secondary mb-1">Description</label><input type="text" id="timeline-desc-${id}" name="timeline-description" placeholder="e.g., Court Hearing" class="w-full p-2 border rounded-md timeline-description"></div>`
         };
 
         function addDynamicItem(container, itemType, options = {}) {
@@ -441,7 +457,6 @@
         function generatePostText(options = {}) {
             const { includedCategories = null } = options;
             let markdown = '';
-            const sectionDivider = '\n---\n\n';
             
             const categoriesToRender = includedCategories ? appCategories.filter(c => includedCategories.includes(c.id)) : appCategories;
 
@@ -451,13 +466,11 @@
 
                 let sectionContent = '';
                 if (category.type === 'fields') {
-                    // This part remains largely the same, but we need to ensure it only processes its own fields
                     const categoryDef = appCategories.find(c => c.id === category.id);
                     if (categoryDef) {
                         categoryDef.fields.forEach(field => {
                             const input = document.getElementById(field.id);
                             if (input && input.value) {
-                               // Specific formatting can be done here based on field.id
                                sectionContent += `${input.value}\n`;
                             }
                         });
@@ -467,8 +480,8 @@
                     if (items.length > 0) {
                          if (category.itemType === 'timelineEvent') {
                             const events = items.map(item => ({
-                                date: item.querySelector('.timeline-date')?.value,
-                                description: item.querySelector('.timeline-description')?.value
+                                date: item.querySelector('[name="timeline-date"]')?.value,
+                                description: item.querySelector('[name="timeline-description"]')?.value
                             })).filter(e => e.date && e.description);
                             
                             events.sort((a, b) => new Date(a.date) - new Date(b.date));
@@ -478,14 +491,15 @@
                             });
                          } else if (category.itemType === 'evidence') {
                             items.forEach(item => {
-                                const title = item.querySelector('.evidence-title').value;
-                                const desc = item.querySelector('.evidence-description').value;
-                                const url = item.querySelector('.evidence-url').value;
-                                const date = item.querySelector('.evidence-date').value;
-                                const imageData = item.querySelector('.evidence-image-data').value;
+                                const title = item.querySelector('[name="evidence-title"]').value;
+                                const desc = item.querySelector('[name="evidence-description"]').value;
+                                const url = item.querySelector('[name="evidence-url"]').value;
+                                const date = item.querySelector('[name="evidence-date"]').value;
+                                const imageData = item.querySelector('[name="evidence-image-data"]').value;
                                 if (imageData) sectionContent += `[IMAGE_PREVIEW:${imageData},${title || 'Evidence'}]\n`;
                                 if(title) sectionContent += `* **${title}**`;
                                 if(date) sectionContent += ` (${new Date(date + 'T00:00:00').toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })})\n`;
+                                else if (title) sectionContent += '\n';
                                 if(desc) sectionContent += `  ${desc.replace(/\n/g, '\n  ')}\n`;
                                 if(url) sectionContent += `  [Source Link](${url})\n`;
                                 sectionContent += '\n';
@@ -493,17 +507,20 @@
                          } else {
                             items.forEach((item, index) => {
                                 const inputs = item.querySelectorAll('input, textarea');
+                                let itemText = '';
                                 inputs.forEach(input => {
-                                    if(input.value) sectionContent += `${input.value}\n`;
+                                    if(input.value && input.type !== 'file' && input.name) itemText += `${input.value}\n`;
                                 });
-                                if (index < items.length - 1) sectionContent += '\n';
+                                if (itemText.trim()) {
+                                    sectionContent += itemText.trim() + '\n\n';
+                                }
                             });
                          }
                     }
                 }
 
                 if (sectionContent.trim()) {
-                    markdown += `**${category.title.toUpperCase()}**\n${sectionContent}\n`;
+                    markdown += `**${category.title.toUpperCase()}**\n${sectionContent.trim()}\n\n`;
                 }
             });
             
@@ -514,7 +531,6 @@
             const placeholderUrl = 'https://placehold.co/64x64/f8fafc/cbd5e1?text=❌';
             return text
                 .replace(/\[IMAGE_PREVIEW:(.*?),(.*?)\]/g, (match, p1, p2) => {
-                    // Check if p1 is a data URL
                     const src = p1.startsWith('data:image') ? p1 : p1;
                     return `<div class="my-2"><img src="${src}" class="inline-block h-16 w-16 rounded-md object-cover" onerror="this.onerror=null;this.src='${placeholderUrl}';"><br><span class="text-xs text-blue-500">${p2}</span></div>`;
                 })
@@ -707,16 +723,17 @@
                     });
                     data.categories[category.id] = fieldData;
                 } else if (category.type === 'dynamic') {
-                    const itemData = Array.from(section.querySelectorAll('.dynamic-item')).map(item => {
+                    data.categories[category.id] = Array.from(section.querySelectorAll('.dynamic-item')).map(item => {
                         if (isTemplate) return {};
                         const singleItemData = {};
-                        const inputs = item.querySelectorAll('input, textarea');
+                        const inputs = item.querySelectorAll('input[name], textarea[name]');
                         inputs.forEach(input => {
-                            singleItemData[input.id] = input.value;
+                           if (input.name) {
+                               singleItemData[input.name] = input.value;
+                           }
                         });
                         return singleItemData;
                     });
-                    data.categories[category.id] = itemData;
                 }
             });
             
@@ -726,7 +743,7 @@
         function populateForm(data, isFromTemplate = false) {
             clearForm();
             
-            if (data.categories) { // New format
+            if (data.categories) {
                  Object.keys(data.categories).forEach(catId => {
                     const categoryData = data.categories[catId];
                     const categoryDef = appCategories.find(c => c.id === catId);
@@ -743,14 +760,14 @@
                             categoryData.forEach(itemData => {
                                 const itemEl = addDynamicItem(container, categoryDef.itemType, { suppressSideEffects: true });
                                 if (itemEl) {
-                                     Object.keys(itemData).forEach(key => {
-                                        const input = itemEl.querySelector(`#${key}`);
+                                     Object.keys(itemData).forEach(key => { // key is now the 'name' attribute
+                                        const input = itemEl.querySelector(`[name="${key}"]`);
                                         if (input) {
                                             input.value = itemData[key] || '';
-                                            if (input.classList.contains('evidence-image-data')) {
-                                                const previewId = input.id.replace('evidence-img-data-', 'img-preview-');
-                                                const previewImg = document.getElementById(previewId);
-                                                if(previewImg && input.value) previewImg.src = input.value;
+                                            // Handle special case for image previews
+                                            if ((key === 'evidence-image-data' || key === 'individual-image-url') && input.value) {
+                                                const previewImg = itemEl.querySelector('.image-preview');
+                                                if(previewImg) previewImg.src = input.value;
                                             }
                                         }
                                      });
@@ -1016,11 +1033,14 @@
         }
 
         // --- Gemini AI Functions ---
-        async function handleAIAssist(type, element) {
-            const buttonIdMap = { 'summarize': 'summarizeBtn', 'expand': 'expandBtn', 'suggest': 'suggestBtn' };
-            const button = document.getElementById(buttonIdMap[type]);
+        async function handleAIAssist(type, element, button) {
             let prompt = '';
-            let content = '';
+            let content = element.value;
+
+            if (!content) { 
+                showToast('There is no text to rewrite.', 'info'); 
+                return;
+            }
 
             button.classList.add('loading');
             button.disabled = true;
@@ -1028,13 +1048,9 @@
             try {
                 switch (type) {
                     case 'summarize':
-                        content = element.value;
-                        if (!content) { showToast('Nothing to summarize.', 'info'); return; }
                         prompt = `Summarize the following text for a social media alert post. Be concise and informative:\n\n${content}`;
                         break;
                     case 'expand':
-                        content = element.value;
-                        if (!content) { showToast('Nothing to expand.', 'info'); return; }
                         prompt = `Expand on the following points, writing them out in a narrative or descriptive paragraph suitable for a social media alert post:\n\n${content}`;
                         break;
                     case 'suggest':
@@ -1042,11 +1058,23 @@
                         if (!content) { showToast('Please write some content before suggesting hashtags.', 'info'); return; }
                         prompt = `Based on the following social media post content, generate a list of 5-10 relevant and effective hashtags. Return them as a single line, separated by spaces, starting with '#'.\n\nPost Content:\n${content}`;
                         break;
+                    case 'formal':
+                        prompt = `Rewrite the following text to have a more formal and official tone:\n\n${content}`;
+                        break;
+                    case 'urgent':
+                        prompt = `Rewrite the following text to sound more urgent and immediate:\n\n${content}`;
+                        break;
+                    case 'factual':
+                        prompt = `Rewrite the following text to state only the facts, removing any emotional or persuasive language:\n\n${content}`;
+                        break;
+                    case 'persuasive':
+                        prompt = `Rewrite the following text to be more persuasive and compelling, encouraging action or awareness:\n\n${content}`;
+                        break;
                 }
 
                 const result = await callGeminiAPI(prompt);
                 element.value = result;
-                element.dispatchEvent(new Event('input', { bubbles: true }));
+                element.dispatchEvent(new Event('input', { bubbles: true })); // To trigger preview update
                 showToast('AI assistance complete!', 'success');
 
             } catch (error) {
@@ -1187,6 +1215,7 @@
         }
 
         function openModal(modalElement) {
+            if (!modalElement) return;
             modalElement.style.display = 'flex';
             appContainer.setAttribute('aria-hidden', 'true');
             const focusableElement = modalElement.querySelector('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
@@ -1194,6 +1223,7 @@
         }
 
         function closeModal(modalElement) {
+            if (!modalElement) return;
             modalElement.style.display = 'none';
             appContainer.removeAttribute('aria-hidden');
             if (modalElement === modals.confirm) {
@@ -1226,7 +1256,7 @@
                 { id: 'caseType', label: "Case Type", type: 'text', placeholder: "e.g., Animal Cruelty Case" },
                 { id: 'location', label: "Location", type: 'text', placeholder: "e.g., Puerto Rico" },
                 { id: 'updateDate', label: "Date of Update", type: 'date' },
-                { id: 'caseUpdate', label: "Key Updates & Orders", type: 'textarea', rows: 4, placeholder: "Use '▪︎' for bullet points" },
+                { id: 'caseUpdate', label: "Key Updates & Orders", type: 'textarea', rows: 4, placeholder: "Use '▪︎' for bullet points", aiAction: 'rewrite' },
                 { id: 'trialDate', label: "Trial / Hearing Date", type: 'text' },
             ]},
             { id: 'timeline', title: 'Timeline of Events', emoji: '🗓️', type: 'dynamic', itemType: 'timelineEvent' },
@@ -1240,8 +1270,8 @@
             { id: 'evidence', title: 'Enhanced Documentation & Evidence', emoji: '📂', type: 'dynamic', itemType: 'evidence' },
             { id: 'articles', title: 'News & Legal Documents', emoji: '📰', type: 'dynamic', itemType: 'article' },
             { id: 'summary', title: 'Summary & Extra Details', emoji: '📝', type: 'fields', fields: [
-                { id: 'backgroundInfo', label: "Background Information", type: 'textarea', rows: 6, aiAction: 'summarize' },
-                { id: 'emergingReports', label: "Emerging Reports", type: 'textarea', rows: 3, aiAction: 'expand' },
+                { id: 'backgroundInfo', label: "Background Information", type: 'textarea', rows: 6, aiAction: 'rewrite' },
+                { id: 'emergingReports', label: "Emerging Reports", type: 'textarea', rows: 3, aiAction: 'rewrite' },
                 { id: 'hashtags', label: "Hashtags", type: 'text', placeholder: "#Hashtag1 #Hashtag2", aiAction: 'suggest' },
             ]},
         ];
@@ -1256,11 +1286,25 @@
                 let contentHtml = '';
                 if (category.type === 'fields') {
                     const fieldsHtml = category.fields.map(field => {
-                        const aiButtonHtml = field.aiAction ? `
-                            <button id="${field.aiAction}Btn" class="ai-btn action-btn text-xs bg-purple-600 hover:bg-purple-700 text-white font-bold py-1 px-2 rounded-lg shadow">
-                                <span class="btn-text">✨ ${field.aiAction.charAt(0).toUpperCase() + field.aiAction.slice(1)}</span>
-                                <span class="spinner">🌀</span>
-                            </button>` : '';
+                        let aiButtonHtml = '';
+                        if (field.aiAction === 'suggest') {
+                            aiButtonHtml = `<button id="${field.aiAction}Btn" class="ai-btn action-btn text-xs bg-purple-600 hover:bg-purple-700 text-white font-bold py-1 px-2 rounded-lg shadow">
+                                <span class="btn-text">✨ Suggest</span><span class="spinner">🌀</span>
+                            </button>`;
+                        } else if (field.aiAction === 'rewrite') {
+                            aiButtonHtml = `<div class="dropdown">
+                                <button class="ai-btn action-btn text-xs bg-purple-600 hover:bg-purple-700 text-white font-bold py-1 px-2 rounded-lg shadow" data-field-id="${field.id}">
+                                    ✨ Rewrite with AI
+                                </button>
+                                <div class="dropdown-content ai-rewrite-menu">
+                                    <a href="#" data-rewrite-style="formal">More Formal</a>
+                                    <a href="#" data-rewrite-style="urgent">More Urgent</a>
+                                    <a href="#" data-rewrite-style="factual">Just the Facts</a>
+                                    <a href="#" data-rewrite-style="persuasive">More Persuasive</a>
+                                </div>
+                            </div>`;
+                        }
+
                         const labelHtml = `<div class="flex justify-between items-center mb-1">
                             <label for="${field.id}" class="block text-sm font-medium text-secondary">${field.label}</label>
                             ${aiButtonHtml}
@@ -1300,14 +1344,29 @@
                     addDynamicItem(container, e.currentTarget.dataset.itemType);
                 });
             });
-            document.querySelectorAll('.ai-btn').forEach(btn => {
+            document.getElementById('suggestBtn')?.addEventListener('click', (e) => {
+                const element = document.getElementById('hashtags');
+                handleAIAssist('suggest', element, e.currentTarget);
+            });
+            document.querySelectorAll('[data-field-id]').forEach(btn => {
                 btn.addEventListener('click', (e) => {
-                    const action = e.currentTarget.id.replace('Btn', '');
-                    const fieldId = e.currentTarget.closest('div').parentElement.querySelector('label').getAttribute('for');
-                    const element = document.getElementById(fieldId);
-                    handleAIAssist(action, element);
+                    e.stopPropagation();
+                    e.currentTarget.parentElement.classList.toggle('show');
                 });
             });
+            document.querySelectorAll('[data-rewrite-style]').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const style = e.currentTarget.dataset.rewriteStyle;
+                    const dropdown = e.currentTarget.closest('.dropdown');
+                    const button = dropdown.querySelector('button');
+                    const fieldId = button.dataset.fieldId;
+                    const element = document.getElementById(fieldId);
+                    handleAIAssist(style, element, button);
+                    dropdown.classList.remove('show');
+                });
+            });
+
             dynamicFormContainer.addEventListener('click', (e) => {
                 handleDynamicItemControls(e);
                 if (e.target.classList.contains('evidence-image-upload')) {
@@ -1357,10 +1416,11 @@
                         }
                         break;
                     case 'delete':
-                        if (confirm(`Are you sure you want to delete the "${appCategories[currentIndex].title}" category? This cannot be undone.`)) {
+                        showConfirmation(`Are you sure you want to delete the "${appCategories[currentIndex].title}" category? This cannot be undone.`, () => {
                            appCategories.splice(currentIndex, 1);
-                        }
-                        break;
+                           renderCategoryList();
+                        });
+                        return; // Prevent re-render before confirmation
                 }
                 renderCategoryList();
             });
@@ -1370,7 +1430,7 @@
             const title = prompt("Enter the new category title:");
             if (!title) return;
             const newCategory = {
-                id: title.toLowerCase().replace(/\s+/g, '-'),
+                id: title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, ''),
                 title: title,
                 emoji: '🆕',
                 type: 'dynamic', // Default to dynamic
@@ -1378,7 +1438,7 @@
             };
             // For simplicity, new categories are dynamic. A more complex UI could allow choosing the type.
             if (!itemTemplates.generic) {
-                itemTemplates.generic = (id) => `<div><label for="generic-text-${id}" class="block text-sm font-medium text-secondary mb-1">Content</label><textarea id="generic-text-${id}" rows="3" class="w-full p-2 border rounded-md generic-text"></textarea></div>`;
+                itemTemplates.generic = (id) => `<div><label for="generic-text-${id}" class="block text-sm font-medium text-secondary mb-1">Content</label><textarea id="generic-text-${id}" name="generic-text" rows="3" class="w-full p-2 border rounded-md generic-text"></textarea></div>`;
             }
             appCategories.push(newCategory);
             renderCategoryList();
@@ -1511,8 +1571,8 @@
                     data.timelineEvents.forEach(event => {
                         const itemEl = addDynamicItem(container, 'timelineEvent', { suppressSideEffects: true });
                         if (itemEl) {
-                            itemEl.querySelector('.timeline-date').value = event.date;
-                            itemEl.querySelector('.timeline-description').value = event.description;
+                            itemEl.querySelector('[name="timeline-date"]').value = event.date;
+                            itemEl.querySelector('[name="timeline-description"]').value = event.description;
                         }
                     });
                     updateItemControls(container);
@@ -1525,7 +1585,7 @@
                  if(container) {
                     data.individuals.forEach(person => {
                         const itemEl = addDynamicItem(container, 'individual', { suppressSideEffects: true });
-                        if(itemEl) itemEl.querySelector('.individual-name').value = person.name;
+                        if(itemEl) itemEl.querySelector('[name="individual-name"]').value = person.name;
                     });
                     updateItemControls(container);
                  }
@@ -1537,7 +1597,7 @@
                  if(container) {
                     data.aliases.forEach(alias => {
                         const itemEl = addDynamicItem(container, 'alias', { suppressSideEffects: true });
-                        if(itemEl) itemEl.querySelector('.alias-name').value = alias.name;
+                        if(itemEl) itemEl.querySelector('[name="alias-name"]').value = alias.name;
                     });
                     updateItemControls(container);
                  }
@@ -1554,8 +1614,9 @@
             const reader = new FileReader();
             reader.onload = (event) => {
                 const dataUrl = event.target.result;
-                const previewImg = document.getElementById(fileInput.dataset.previewId);
-                const dataTextarea = fileInput.closest('.dynamic-item').querySelector('.evidence-image-data');
+                const dynamicItem = fileInput.closest('.dynamic-item');
+                const previewImg = dynamicItem.querySelector('.image-preview');
+                const dataTextarea = dynamicItem.querySelector('[name="evidence-image-data"]');
                 
                 if (previewImg) previewImg.src = dataUrl;
                 if (dataTextarea) dataTextarea.value = dataUrl;
@@ -1564,6 +1625,77 @@
                 startAutosave();
             };
             reader.readAsDataURL(file);
+        }
+
+        async function runSanityCheck() {
+            const button = document.getElementById('aiReviewBtn');
+            const resultContainer = document.getElementById('aiReviewResult');
+            
+            button.classList.add('loading');
+            button.disabled = true;
+            resultContainer.innerHTML = `<p class="text-secondary">AI is reviewing your post...</p>`;
+            openModal(modals.aiReview);
+
+            const data = getFormData();
+            const issues = [];
+            const today = new Date('2025-07-07T00:00:00'); // Use a fixed date for consistent testing
+
+            // Check 1: Individuals vs Aliases
+            const individualsCount = data.categories.individuals?.length || 0;
+            const aliasesCount = data.categories.aliases?.length || 0;
+            if (individualsCount > 0 && aliasesCount === 0) {
+                issues.push(`The post lists ${individualsCount} individual(s) but no aliases. Consider if any aliases should be added.`);
+            }
+
+            // Check 2: Past dates
+            const trialDateStr = data.categories.mainInfo?.trialDate;
+            if (trialDateStr) {
+                try {
+                    // Attempt to parse various date formats
+                    const trialDate = new Date(trialDateStr);
+                    if (!isNaN(trialDate.getTime()) && trialDate < today) {
+                        issues.push(`The trial/hearing date "${trialDateStr}" appears to be in the past. Please verify if this is correct or if it should be a future date.`);
+                    }
+                } catch(e) { /* Ignore parsing errors */ }
+            }
+
+            // Check 3: Allegations without sources
+            const hasAllegations = (data.categories.fraudAllegations?.length > 0 && data.categories.fraudAllegations.some(a => a['fraudulent-solicitation-text']?.trim())) ||
+                                   (data.categories.warnings?.length > 0 && data.categories.warnings.some(w => w['warning-account-text']?.trim()));
+            const hasSources = (data.categories.evidence?.length > 0) || (data.categories.articles?.length > 0);
+            if (hasAllegations && !hasSources) {
+                issues.push("The post contains allegations or warnings but does not appear to have any sources listed in the 'Evidence' or 'News & Legal Documents' sections. Adding source links can improve credibility.");
+            }
+
+            if (issues.length === 0) {
+                resultContainer.innerHTML = `<p class="text-green-600 font-semibold">✅ No obvious issues found. The post looks good!</p>`;
+                button.classList.remove('loading');
+                button.disabled = false;
+                return;
+            }
+
+            const prompt = `You are a helpful assistant reviewing a social media alert post for potential issues. The user has provided the following points of concern. Please rephrase them into a friendly, constructive, and easy-to-read bulleted list of suggestions. Do not add any new information, just rephrase the provided points.
+
+Points of concern:
+- ${issues.join('\n- ')}
+`;
+
+            try {
+                const suggestions = await callGeminiAPI(prompt);
+                resultContainer.innerHTML = `
+                    <p class="text-secondary mb-4">Here are a few suggestions to improve the post:</p>
+                    <ul class="text-primary space-y-3">
+                        ${suggestions.replace(/^\* /gm, '<li>').replace(/$/gm, '</li>')}
+                    </ul>
+                `;
+            } catch (error) {
+                console.error("Sanity Check Error:", error);
+                showToast(error.message, 'error');
+                resultContainer.innerHTML = `<p class="text-red-500">Could not complete AI review. ${error.message}</p>`;
+            } finally {
+                button.classList.remove('loading');
+                button.disabled = false;
+            }
         }
 
 
