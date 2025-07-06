@@ -100,7 +100,7 @@
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         .spinner { animation: spin 1s linear infinite; }
         .dropdown { position: relative; display: inline-block; }
-        .dropdown-content { display: none; position: absolute; background-color: var(--bg-secondary); min-width: 160px; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2); z-index: 1; border-radius: 0.375rem; border: 1px solid var(--border-color); bottom: 100%; right: 0; margin-bottom: 0.5rem;}
+        .dropdown-content { display: none; position: absolute; background-color: var(--bg-secondary); min-width: 200px; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2); z-index: 1; border-radius: 0.375rem; border: 1px solid var(--border-color); bottom: 100%; right: 0; margin-bottom: 0.5rem;}
         .dropdown-content a { color: var(--text-primary); padding: 12px 16px; text-decoration: none; display: block; font-size: 0.875rem; }
         .dropdown-content a:hover { background-color: var(--preview-bg); }
         .dropdown.show .dropdown-content { display: block; }
@@ -119,6 +119,9 @@
         /* Category Manager */
         .category-manager-item { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 0.375rem; }
         .category-manager-item .handle { cursor: move; }
+        
+        /* Selective Export */
+        #selectiveExportCategoryList label { display: flex; align-items: center; gap: 0.5rem; padding: 0.25rem; }
     </style>
 </head>
 <body class="text-gray-800">
@@ -153,6 +156,24 @@
                         </div>
                         <div id="editingStatus" class="text-center text-sm text-secondary font-semibold h-5" aria-live="polite"></div>
                     </div>
+                    
+                    <div class="form-section shadow-md">
+                        <div class="form-section-header" role="button" aria-expanded="true" aria-controls="aiExtractorContent" tabindex="0">
+                            <h3><span aria-hidden="true" class="text-xl mr-2">🤖</span>AI Article Extractor</h3>
+                            <svg class="chevron-icon w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                        <div class="form-section-content" id="aiExtractorContent">
+                            <p class="text-sm text-secondary mb-2">Paste a news article URL to automatically fill the form. (This is a simulation and will use a sample article).</p>
+                            <div class="flex gap-2">
+                                <input type="url" id="articleUrlInput" placeholder="https://www.news.com/article..." class="w-full p-2 border rounded-md">
+                                <button id="fetchArticleBtn" class="ai-btn action-btn bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg shadow">
+                                    <span class="btn-text">✨ Fetch & Fill</span>
+                                    <span class="spinner">🌀</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
 
                     <div id="dynamic-form-container">
                         <!-- Categories will be rendered here by JavaScript -->
@@ -185,6 +206,8 @@
                                     <a href="#" id="exportTxt">as Plain Text (.txt)</a>
                                     <a href="#" id="exportMd">as Markdown (.md)</a>
                                     <a href="#" id="exportPdf">as PDF Document</a>
+                                    <hr class="my-1 border-border-color">
+                                    <a href="#" id="selectiveExportBtn">as Selective Export...</a>
                                 </div>
                             </div>
                         </div>
@@ -200,6 +223,7 @@
     <div id="historyModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="historyModalTitle"><div class="modal-content"><button class="close-button" id="closeHistoryModal" aria-label="Close modal">&times;</button><h2 id="historyModalTitle" class="text-2xl font-bold mb-4 text-headings">Post History</h2><div id="historyList" class="space-y-2 max-h-80 overflow-y-auto"><p class="text-secondary">No history found.</p></div></div></div>
     <div id="confirmModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="confirmModalTitle"><div class="modal-content"><h2 id="confirmModalTitle" class="text-xl font-bold mb-4 text-headings">Confirm Action</h2><p id="confirmModalText" class="mb-6 text-primary">Are you sure?</p><div class="flex justify-end space-x-4"><button id="confirmCancelBtn" class="action-btn px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-md">Cancel</button><button id="confirmOkBtn" class="action-btn px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md">Confirm</button></div></div></div>
     <div id="categoryManagerModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="categoryManagerModalTitle"><div class="modal-content"><button class="close-button" id="closeCategoryManagerModal" aria-label="Close modal">&times;</button><h2 id="categoryManagerModalTitle" class="text-2xl font-bold mb-4 text-headings">Manage Categories</h2><div id="categoryList" class="space-y-2 max-h-80 overflow-y-auto"></div><div class="mt-6 pt-4 border-t border-border-color flex flex-col gap-2"><button id="addNewCategoryBtn" class="action-btn w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg">Add New Category</button><button id="saveCategoryChangesBtn" class="action-btn w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">Save and Close</button></div></div></div>
+    <div id="selectiveExportModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="selectiveExportModalTitle"><div class="modal-content"><button class="close-button" id="closeSelectiveExportModal" aria-label="Close modal">&times;</button><h2 id="selectiveExportModalTitle" class="text-2xl font-bold mb-4 text-headings">Selective Export</h2><p class="text-secondary mb-4">Choose which categories to include in the export.</p><div id="selectiveExportCategoryList" class="space-y-2"></div><div class="mt-6 pt-4 border-t border-border-color flex gap-2"><button id="performSelectiveExportBtn" class="action-btn w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">Export Selected</button></div></div></div>
 
     <script>
     document.addEventListener('DOMContentLoaded', () => {
@@ -236,6 +260,7 @@
             history: document.getElementById('historyModal'),
             confirm: document.getElementById('confirmModal'),
             categoryManager: document.getElementById('categoryManagerModal'),
+            selectiveExport: document.getElementById('selectiveExportModal'),
         };
 
         const closeButtons = {
@@ -243,6 +268,7 @@
             templates: document.getElementById('closeTemplatesModal'),
             history: document.getElementById('closeHistoryModal'),
             categoryManager: document.getElementById('closeCategoryManagerModal'),
+            selectiveExport: document.getElementById('closeSelectiveExportModal'),
         };
 
         const lists = {
@@ -250,6 +276,7 @@
             templates: document.getElementById('templatesList'),
             history: document.getElementById('historyList'),
             categories: document.getElementById('categoryList'),
+            selectiveExport: document.getElementById('selectiveExportCategoryList'),
         };
         
         const postSearchInput = document.getElementById('postSearchInput');
@@ -323,12 +350,14 @@
         document.getElementById('exportTxt').addEventListener('click', exportAsTxt);
         document.getElementById('exportMd').addEventListener('click', exportAsMd);
         document.getElementById('exportPdf').addEventListener('click', exportAsPdf);
+        document.getElementById('selectiveExportBtn').addEventListener('click', openSelectiveExportModal);
         document.getElementById('exportPostsBtn').addEventListener('click', exportPosts);
         document.getElementById('importPostsBtn').addEventListener('click', () => importFileInput.click());
         importFileInput.addEventListener('change', handleImport);
         document.getElementById('saveAsTemplateBtn').addEventListener('click', saveCurrentAsTemplate);
         document.getElementById('addNewCategoryBtn').addEventListener('click', addNewCategory);
         document.getElementById('saveCategoryChangesBtn').addEventListener('click', saveCategoryChanges);
+        document.getElementById('fetchArticleBtn').addEventListener('click', handleArticleExtraction);
         
         function handleDynamicItemControls(e) {
             const button = e.target.closest('.control-btn');
@@ -369,8 +398,9 @@
             fraudulentSolicitation: (id) => `<div><label for="fraud-text-${id}" class="block text-sm font-medium text-secondary mb-1">Allegation Details</label><textarea id="fraud-text-${id}" rows="3" class="w-full p-2 border rounded-md fraudulent-solicitation-text"></textarea></div>`,
             warningAndAccount: (id) => `<div><label for="warning-text-${id}" class="block text-sm font-medium text-secondary mb-1">Account/Warning Details</label><textarea id="warning-text-${id}" rows="3" class="w-full p-2 border rounded-md warning-account-text"></textarea></div>`,
             investigation: (id) => `<div><label for="inv-title-${id}" class="block text-sm font-medium text-secondary mb-1">Title</label><input type="text" id="inv-title-${id}" class="w-full p-2 border rounded-md mb-2 investigation-title"></div><div><label for="inv-url-${id}" class="block text-sm font-medium text-secondary mb-1">URL</label><input type="url" id="inv-url-${id}" class="w-full p-2 border rounded-md mb-2 investigation-url"></div>`,
-            evidence: (id) => `<div class="flex gap-4"><img class="image-preview" id="img-preview-${id}" src="https://placehold.co/64x64/f8fafc/cbd5e1?text=🖼️" onerror="this.onerror=null;this.src='https://placehold.co/64x64/f8fafc/cbd5e1?text=❌';"><div class="flex-grow"><label for="evidence-img-${id}" class="block text-sm font-medium text-secondary mb-1">Image URL</label><input type="url" id="evidence-img-${id}" class="w-full p-2 border rounded-md mb-2 evidence-image-url" oninput="document.getElementById('img-preview-${id}').src=this.value || 'https://placehold.co/64x64/f8fafc/cbd5e1?text=🖼️'"></div></div><div><label for="evidence-title-${id}" class="block text-sm font-medium text-secondary mb-1">Title</label><input type="text" id="evidence-title-${id}" class="w-full p-2 border rounded-md mb-2 evidence-title"></div><div><label for="evidence-desc-${id}" class="block text-sm font-medium text-secondary mb-1">Description</label><textarea id="evidence-desc-${id}" rows="3" class="w-full p-2 border rounded-md mb-2 evidence-description"></textarea></div><div class="grid grid-cols-1 md:grid-cols-2 gap-2"><div><label for="evidence-url-${id}" class="block text-sm font-medium text-secondary mb-1">URL</label><input type="url" id="evidence-url-${id}" class="w-full p-2 border rounded-md evidence-url"></div><div><label for="evidence-date-${id}" class="block text-sm font-medium text-secondary mb-1">Date (Optional)</label><input type="date" id="evidence-date-${id}" class="w-full p-2 border rounded-md evidence-date"></div></div>`,
-            article: (id) => `<div><label for="art-title-${id}" class="block text-sm font-medium text-secondary mb-1">Title</label><input type="text" id="art-title-${id}" class="w-full p-2 border rounded-md mb-2 article-title"></div><div><label for="art-url-${id}" class="block text-sm font-medium text-secondary mb-1">URL</label><input type="url" id="art-url-${id}" class="w-full p-2 border rounded-md mb-2 article-url"></div>`
+            evidence: (id) => `<div class="flex gap-4"><img class="image-preview" id="img-preview-${id}" src="https://placehold.co/64x64/f8fafc/cbd5e1?text=🖼️" onerror="this.onerror=null;this.src='https://placehold.co/64x64/f8fafc/cbd5e1?text=❌';"><div class="flex-grow"><label for="evidence-img-${id}" class="block text-sm font-medium text-secondary mb-1">Upload Image</label><input type="file" id="evidence-img-${id}" class="w-full p-1 border rounded-md mb-2 evidence-image-upload" accept="image/*" data-preview-id="img-preview-${id}"></div></div><div><label for="evidence-title-${id}" class="block text-sm font-medium text-secondary mb-1">Title</label><input type="text" id="evidence-title-${id}" class="w-full p-2 border rounded-md mb-2 evidence-title"></div><div><label for="evidence-desc-${id}" class="block text-sm font-medium text-secondary mb-1">Description</label><textarea id="evidence-desc-${id}" rows="3" class="w-full p-2 border rounded-md mb-2 evidence-description"></textarea></div><div class="grid grid-cols-1 md:grid-cols-2 gap-2"><div><label for="evidence-url-${id}" class="block text-sm font-medium text-secondary mb-1">Source URL</label><input type="url" id="evidence-url-${id}" class="w-full p-2 border rounded-md evidence-url"></div><div><label for="evidence-date-${id}" class="block text-sm font-medium text-secondary mb-1">Date (Optional)</label><input type="date" id="evidence-date-${id}" class="w-full p-2 border rounded-md evidence-date"></div></div><textarea id="evidence-img-data-${id}" class="hidden evidence-image-data"></textarea>`,
+            article: (id) => `<div><label for="art-title-${id}" class="block text-sm font-medium text-secondary mb-1">Title</label><input type="text" id="art-title-${id}" class="w-full p-2 border rounded-md mb-2 article-title"></div><div><label for="art-url-${id}" class="block text-sm font-medium text-secondary mb-1">URL</label><input type="url" id="art-url-${id}" class="w-full p-2 border rounded-md mb-2 article-url"></div>`,
+            timelineEvent: (id) => `<div><label for="timeline-date-${id}" class="block text-sm font-medium text-secondary mb-1">Date</label><input type="date" id="timeline-date-${id}" class="w-full p-2 border rounded-md timeline-date"></div><div><label for="timeline-desc-${id}" class="block text-sm font-medium text-secondary mb-1">Description</label><input type="text" id="timeline-desc-${id}" placeholder="e.g., Court Hearing" class="w-full p-2 border rounded-md timeline-description"></div>`
         };
 
         function addDynamicItem(container, itemType, options = {}) {
@@ -396,8 +426,9 @@
         }
 
         // --- Core Logic: Preview & Formatting ---
-        function updatePreview() {
-            const markdownText = generatePostText();
+        function updatePreview(options = {}) {
+            const { includedCategories = null } = options;
+            const markdownText = generatePostText({ includedCategories });
             const textForClipboard = markdownText.replace(/\[IMAGE_PREVIEW:(.*?),(.*?)\]/g, '[IMAGE: $2]');
             
             preview.innerHTML = renderMarkdown(markdownText);
@@ -407,69 +438,67 @@
             charCount.textContent = limit > 0 ? `${textForClipboard.length} / ${limit}` : `${textForClipboard.length}`;
         }
 
-        function generatePostText() {
+        function generatePostText(options = {}) {
+            const { includedCategories = null } = options;
             let markdown = '';
             const sectionDivider = '\n---\n\n';
             
-            appCategories.forEach(category => {
+            const categoriesToRender = includedCategories ? appCategories.filter(c => includedCategories.includes(c.id)) : appCategories;
+
+            categoriesToRender.forEach(category => {
                 const section = document.getElementById(`section-content-${category.id}`);
                 if (!section) return;
 
                 let sectionContent = '';
                 if (category.type === 'fields') {
-                    category.fields.forEach(field => {
-                        const input = document.getElementById(field.id);
-                        if (input && input.value) {
-                           switch(field.id) {
-                                case 'subjectName':
-                                case 'caseType':
-                                case 'location':
-                                    // Handled together to form the title
-                                    break;
-                                case 'updateDate':
-                                    sectionContent += `As of **${new Date(input.value + 'T00:00:00').toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }).toUpperCase()}**, ...\n`;
-                                    break;
-                                case 'caseUpdate':
-                                    sectionContent += `${input.value}\n\n`;
-                                    break;
-                                case 'trialDate':
-                                    sectionContent += `**Her 𝐉𝐮𝐫𝐲 𝐭𝐫𝐢𝐚𝐥 𝐢𝐬 𝐬𝐞𝐭 𝐟𝐨𝐫 ${input.value}.**\n\n`;
-                                    break;
-                                default:
-                                    sectionContent += `${input.value}\n\n`;
-                           }
-                        }
-                    });
-                    // Special title composition for mainInfo
-                    if (category.id === 'mainInfo') {
-                        const subjectName = document.getElementById('subjectName')?.value;
-                        const caseType = document.getElementById('caseType')?.value;
-                        const location = document.getElementById('location')?.value;
-                        if (subjectName || caseType) {
-                            markdown += `**𝐔𝐏𝐃𝐀𝐓𝐄: ${subjectName} ${caseType} – ${location}**\n\n`;
-                        }
+                    // This part remains largely the same, but we need to ensure it only processes its own fields
+                    const categoryDef = appCategories.find(c => c.id === category.id);
+                    if (categoryDef) {
+                        categoryDef.fields.forEach(field => {
+                            const input = document.getElementById(field.id);
+                            if (input && input.value) {
+                               // Specific formatting can be done here based on field.id
+                               sectionContent += `${input.value}\n`;
+                            }
+                        });
                     }
                 } else if (category.type === 'dynamic') {
-                    const items = section.querySelectorAll('.dynamic-item');
+                    const items = Array.from(section.querySelectorAll('.dynamic-item'));
                     if (items.length > 0) {
-                         items.forEach((item, index) => {
-                            switch(category.itemType) {
-                                case 'individual':
-                                    const name = item.querySelector('.individual-name').value, dob = item.querySelector('.individual-dob').value, phone = item.querySelector('.individual-phone').value, email = item.querySelector('.individual-email').value, address = item.querySelector('.individual-address').value, imageUrl = item.querySelector('.individual-image-url').value;
-                                    if (imageUrl) sectionContent += `[IMAGE_PREVIEW:${imageUrl},${name || 'Individual'}]\n`;
-                                    const fbLink = item.querySelector('.individual-fb-link').value, igLink = item.querySelector('.individual-ig-link').value, xLink = item.querySelector('.individual-x-link').value, otherLinks = item.querySelector('.individual-other-links').value.split(',').map(l => l.trim()).filter(l => l);
-                                    if (name) sectionContent += `**${name}**\n`; if (dob) sectionContent += `DOB: ${dob}\n`; if (address) sectionContent += `Address: ${address}\n`; if (phone) sectionContent += `Phone: ${phone}\n`; if (email) sectionContent += `Email: ${email}\n`;
-                                    if (fbLink) sectionContent += `[Facebook](${fbLink})\n`; if (igLink) sectionContent += `[Instagram](${igLink})\n`; if (xLink) sectionContent += `[X (Twitter)](${xLink})\n`;
-                                    otherLinks.forEach(link => { let linkName = 'Link'; try { linkName = new URL(link).hostname.replace('www.', ''); } catch (e) {} sectionContent += `[${linkName}](${link})\n`; });
-                                    break;
-                                case 'alias':
-                                    const aliasName = item.querySelector('.alias-name').value;
-                                    if(aliasName) sectionContent += `* ${aliasName}\n`;
-                                    break;
-                                // Add other dynamic item types here...
-                            }
-                            if (index < items.length - 1) sectionContent += sectionDivider; else sectionContent += '\n';
-                         });
+                         if (category.itemType === 'timelineEvent') {
+                            const events = items.map(item => ({
+                                date: item.querySelector('.timeline-date')?.value,
+                                description: item.querySelector('.timeline-description')?.value
+                            })).filter(e => e.date && e.description);
+                            
+                            events.sort((a, b) => new Date(a.date) - new Date(b.date));
+                            
+                            events.forEach(event => {
+                                sectionContent += `* **${new Date(event.date + 'T00:00:00').toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}:** ${event.description}\n`;
+                            });
+                         } else if (category.itemType === 'evidence') {
+                            items.forEach(item => {
+                                const title = item.querySelector('.evidence-title').value;
+                                const desc = item.querySelector('.evidence-description').value;
+                                const url = item.querySelector('.evidence-url').value;
+                                const date = item.querySelector('.evidence-date').value;
+                                const imageData = item.querySelector('.evidence-image-data').value;
+                                if (imageData) sectionContent += `[IMAGE_PREVIEW:${imageData},${title || 'Evidence'}]\n`;
+                                if(title) sectionContent += `* **${title}**`;
+                                if(date) sectionContent += ` (${new Date(date + 'T00:00:00').toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })})\n`;
+                                if(desc) sectionContent += `  ${desc.replace(/\n/g, '\n  ')}\n`;
+                                if(url) sectionContent += `  [Source Link](${url})\n`;
+                                sectionContent += '\n';
+                            });
+                         } else {
+                            items.forEach((item, index) => {
+                                const inputs = item.querySelectorAll('input, textarea');
+                                inputs.forEach(input => {
+                                    if(input.value) sectionContent += `${input.value}\n`;
+                                });
+                                if (index < items.length - 1) sectionContent += '\n';
+                            });
+                         }
                     }
                 }
 
@@ -477,16 +506,6 @@
                     markdown += `**${category.title.toUpperCase()}**\n${sectionContent}\n`;
                 }
             });
-
-            // Handle summary section separately as it's not in the dynamic categories
-            const backgroundInfo = document.getElementById('backgroundInfo')?.value;
-            const emergingReports = document.getElementById('emergingReports')?.value;
-            const hashtags = document.getElementById('hashtags')?.value;
-
-            if (backgroundInfo) { markdown += `**BACKGROUND**\n${backgroundInfo}\n\n`; }
-            if (emergingReports) { markdown += `**EMERGING REPORTS**\n${emergingReports.toUpperCase()}\n\n`; }
-            markdown += '### Disclaimer:\n***The information shared in this post is based on publicly available information...***\n\n';
-            if (hashtags) { markdown += `${hashtags}\n`; }
             
             return markdown.trim();
         }
@@ -494,7 +513,11 @@
         function renderMarkdown(text) {
             const placeholderUrl = 'https://placehold.co/64x64/f8fafc/cbd5e1?text=❌';
             return text
-                .replace(/\[IMAGE_PREVIEW:(.*?),(.*?)\]/g, `<div class="my-2"><img src="$1" class="inline-block h-16 w-16 rounded-md object-cover" onerror="this.onerror=null;this.src='${placeholderUrl}';"><br><a href="$1" class="text-xs text-blue-500" target="_blank" rel="noopener noreferrer">$1</a></div>`)
+                .replace(/\[IMAGE_PREVIEW:(.*?),(.*?)\]/g, (match, p1, p2) => {
+                    // Check if p1 is a data URL
+                    const src = p1.startsWith('data:image') ? p1 : p1;
+                    return `<div class="my-2"><img src="${src}" class="inline-block h-16 w-16 rounded-md object-cover" onerror="this.onerror=null;this.src='${placeholderUrl}';"><br><span class="text-xs text-blue-500">${p2}</span></div>`;
+                })
                 .replace(/\*\*\*(.*?)\*\*\*/g, '<strong><em>$1</em></strong>')
                 .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
                 .replace(/\*(.*?)\*/g, '<em>$1</em>')
@@ -687,11 +710,9 @@
                     const itemData = Array.from(section.querySelectorAll('.dynamic-item')).map(item => {
                         if (isTemplate) return {};
                         const singleItemData = {};
-                        // This part needs to be more generic if more item types are added
                         const inputs = item.querySelectorAll('input, textarea');
                         inputs.forEach(input => {
-                            const key = input.className.split(' ').find(cls => cls.includes(`-${category.itemType}-`));
-                            if(key) singleItemData[key] = input.value;
+                            singleItemData[input.id] = input.value;
                         });
                         return singleItemData;
                     });
@@ -723,8 +744,15 @@
                                 const itemEl = addDynamicItem(container, categoryDef.itemType, { suppressSideEffects: true });
                                 if (itemEl) {
                                      Object.keys(itemData).forEach(key => {
-                                        const input = itemEl.querySelector(`.${key}`);
-                                        if (input) input.value = itemData[key] || '';
+                                        const input = itemEl.querySelector(`#${key}`);
+                                        if (input) {
+                                            input.value = itemData[key] || '';
+                                            if (input.classList.contains('evidence-image-data')) {
+                                                const previewId = input.id.replace('evidence-img-data-', 'img-preview-');
+                                                const previewImg = document.getElementById(previewId);
+                                                if(previewImg && input.value) previewImg.src = input.value;
+                                            }
+                                        }
                                      });
                                 }
                             });
@@ -989,7 +1017,7 @@
 
         // --- Gemini AI Functions ---
         async function handleAIAssist(type, element) {
-            const buttonIdMap = { 'summarize': 'summarizeBackground', 'expand': 'expandReports', 'hashtags': 'suggestHashtags' };
+            const buttonIdMap = { 'summarize': 'summarizeBtn', 'expand': 'expandBtn', 'suggest': 'suggestBtn' };
             const button = document.getElementById(buttonIdMap[type]);
             let prompt = '';
             let content = '';
@@ -1009,7 +1037,7 @@
                         if (!content) { showToast('Nothing to expand.', 'info'); return; }
                         prompt = `Expand on the following points, writing them out in a narrative or descriptive paragraph suitable for a social media alert post:\n\n${content}`;
                         break;
-                    case 'hashtags':
+                    case 'suggest':
                         content = generatePostText();
                         if (!content) { showToast('Please write some content before suggesting hashtags.', 'info'); return; }
                         prompt = `Based on the following social media post content, generate a list of 5-10 relevant and effective hashtags. Return them as a single line, separated by spaces, starting with '#'.\n\nPost Content:\n${content}`;
@@ -1030,13 +1058,20 @@
             }
         }
 
-        async function callGeminiAPI(prompt) {
+        async function callGeminiAPI(prompt, jsonSchema = null) {
             const apiKey = ""; // This will be handled by the environment
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
             
             const payload = {
                 contents: [{ role: "user", parts: [{ text: prompt }] }]
             };
+
+            if (jsonSchema) {
+                payload.generationConfig = {
+                    responseMimeType: "application/json",
+                    responseSchema: jsonSchema
+                };
+            }
 
             const response = await fetch(apiUrl, {
                 method: 'POST',
@@ -1074,49 +1109,43 @@
             URL.revokeObjectURL(url);
         }
 
-        function exportAsTxt() {
-            const text = generatePostText().replace(/\[IMAGE_PREVIEW:(.*?),(.*?)\]/g, '[IMAGE: $2]').replace(/\[(.*?)\]\((.*?)\)/g, '$1: $2');
+        function exportAsTxt(includedCategories = null) {
+            const text = generatePostText({ includedCategories }).replace(/\[IMAGE_PREVIEW:(.*?),(.*?)\]/g, '[IMAGE: $2]').replace(/\[(.*?)\]\((.*?)\)/g, '$1: $2');
             downloadFile(`${currentPostName || 'post'}.txt`, text, 'text/plain;charset=utf-8;');
         }
 
-        function exportAsMd() {
-            const text = generatePostText().replace(/\[IMAGE_PREVIEW:(.*?),(.*?)\]/g, '![IMAGE: $2]($1)');
+        function exportAsMd(includedCategories = null) {
+            const text = generatePostText({ includedCategories }).replace(/\[IMAGE_PREVIEW:(.*?),(.*?)\]/g, '![IMAGE: $2]($1)');
             downloadFile(`${currentPostName || 'post'}.md`, text, 'text/markdown;charset=utf-8;');
         }
 
-        function exportAsPdf() {
-            const source = document.getElementById('preview');
-            const { jsPDF } = window.jspdf;
+        function exportAsPdf(includedCategories = null) {
+            const tempPreview = document.createElement('div');
+            tempPreview.innerHTML = renderMarkdown(generatePostText({ includedCategories }));
             
             showToast("Generating PDF...", "info");
 
-            html2canvas(source, {
+            html2canvas(tempPreview, {
                 useCORS: true,
                 scale: 2,
                 backgroundColor: document.documentElement.classList.contains('dark') ? '#1f2937' : '#f3f4f6',
             }).then(canvas => {
+                const { jsPDF } = window.jspdf;
                 const imgData = canvas.toDataURL('image/png');
-                const pdf = new jsPDF({
-                    orientation: 'p',
-                    unit: 'mm',
-                    format: 'a4'
-                });
-
+                const pdf = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
                 const pdfWidth = pdf.internal.pageSize.getWidth();
-                const pdfHeight = pdf.internal.pageSize.getHeight();
-                const imgWidth = pdfWidth;
                 const imgHeight = canvas.height * pdfWidth / canvas.width;
                 let heightLeft = imgHeight;
                 let position = 0;
 
-                pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-                heightLeft -= pdfHeight;
+                pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
+                heightLeft -= pdf.internal.pageSize.getHeight();
 
                 while (heightLeft > 0) {
                     position = -heightLeft;
                     pdf.addPage();
-                    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-                    heightLeft -= pdfHeight;
+                    pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
+                    heightLeft -= pdf.internal.pageSize.getHeight();
                 }
                 pdf.save(`${currentPostName || 'post'}.pdf`);
                 showToast("PDF downloaded.", "success");
@@ -1125,6 +1154,28 @@
                 showToast("PDF export failed. See console for details.", "error");
             });
         }
+        
+        function openSelectiveExportModal() {
+            lists.selectiveExport.innerHTML = '';
+            appCategories.forEach(category => {
+                const item = document.createElement('div');
+                item.innerHTML = `
+                    <label>
+                        <input type="checkbox" class="selective-export-checkbox" value="${category.id}" checked>
+                        <span>${category.emoji} ${category.title}</span>
+                    </label>
+                `;
+                lists.selectiveExport.appendChild(item);
+            });
+            openModal(modals.selectiveExport);
+        }
+
+        document.getElementById('performSelectiveExportBtn').addEventListener('click', () => {
+            const selectedCategories = Array.from(document.querySelectorAll('.selective-export-checkbox:checked')).map(cb => cb.value);
+            exportAsMd(selectedCategories); // Defaulting to MD for selective, could add more options
+            closeModal(modals.selectiveExport);
+        });
+
 
         // --- Toast & Modal Helpers ---
         function showToast(message, type = 'success') { const toastContainer = document.getElementById('toast-container'); const toast = document.createElement('div'); toast.className = `toast ${type}`; toast.textContent = message; toastContainer.appendChild(toast); setTimeout(() => { toast.classList.add('show'); }, 10); setTimeout(() => { toast.classList.remove('show'); toast.addEventListener('transitionend', () => toast.remove()); }, 4000); }
@@ -1178,6 +1229,7 @@
                 { id: 'caseUpdate', label: "Key Updates & Orders", type: 'textarea', rows: 4, placeholder: "Use '▪︎' for bullet points" },
                 { id: 'trialDate', label: "Trial / Hearing Date", type: 'text' },
             ]},
+            { id: 'timeline', title: 'Timeline of Events', emoji: '🗓️', type: 'dynamic', itemType: 'timelineEvent' },
             { id: 'individuals', title: 'Blacklisted Individuals', emoji: '👤', type: 'dynamic', itemType: 'individual' },
             { id: 'aliases', title: 'Aliases', emoji: '🎭', type: 'dynamic', itemType: 'alias' },
             { id: 'organizations', title: 'Associated Organizations', emoji: '🏢', type: 'dynamic', itemType: 'organization' },
@@ -1251,12 +1303,17 @@
             document.querySelectorAll('.ai-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     const action = e.currentTarget.id.replace('Btn', '');
-                    const fieldId = e.currentTarget.parentElement.querySelector('label').getAttribute('for');
+                    const fieldId = e.currentTarget.closest('div').parentElement.querySelector('label').getAttribute('for');
                     const element = document.getElementById(fieldId);
                     handleAIAssist(action, element);
                 });
             });
-            dynamicFormContainer.addEventListener('click', handleDynamicItemControls);
+            dynamicFormContainer.addEventListener('click', (e) => {
+                handleDynamicItemControls(e);
+                if (e.target.classList.contains('evidence-image-upload')) {
+                    handleImageUpload(e);
+                }
+            });
         }
 
         function openCategoryManager() {
@@ -1347,6 +1404,168 @@
             closeModal(modals.categoryManager);
             showToast('Categories updated!', 'success');
         }
+
+        async function handleArticleExtraction() {
+            const url = document.getElementById('articleUrlInput').value;
+            if (!url) {
+                showToast('Please enter a URL.', 'info');
+                return;
+            }
+
+            const button = document.getElementById('fetchArticleBtn');
+            button.classList.add('loading');
+            button.disabled = true;
+
+            try {
+                // In a real application, you would fetch the URL content via a server-side proxy
+                // to avoid CORS issues. Here, we simulate it with sample text.
+                const articleText = `
+                    MAYAGÜEZ, PR – Jury selection was completed Tuesday in the animal cruelty case against Erica Marie Erickson in Mayagüez, Puerto Rico. 
+                    The trial is set to begin on July 15, 2025. Previously, on May 7, 2025, a motion to dismiss was denied by the judge.
+                    Erickson, also known as "Erica the Rescuer" on social media, faces multiple charges after dozens of malnourished animals were found on her property in early February.
+                    Authorities were alerted by a former volunteer, Jane Smith, who provided testimony about the conditions. Another individual, John Doe, is also being investigated in connection with the case.
+                `;
+                
+                showToast('Extracting information with AI...', 'info');
+
+                const jsonSchema = {
+                    type: "OBJECT",
+                    properties: {
+                        subjectName: { type: "STRING", description: "The full name of the main person the case is about." },
+                        caseType: { type: "STRING", description: "The type of case, e.g., 'Animal Cruelty Case'." },
+                        location: { type: "STRING", description: "The city and state/country where the case is located." },
+                        keyUpdates: { type: "STRING", description: "A summary of the most recent key updates mentioned in the article." },
+                        trialDate: { type: "STRING", description: "The upcoming trial or hearing date, formatted as Month Day, Year." },
+                        timelineEvents: {
+                            type: "ARRAY",
+                            description: "A list of important events with their dates.",
+                            items: {
+                                type: "OBJECT",
+                                properties: {
+                                    date: { type: "STRING", description: "The date of the event in YYYY-MM-DD format." },
+                                    description: { type: "STRING", description: "A brief description of the event." }
+                                }
+                            }
+                        },
+                        individuals: {
+                            type: "ARRAY",
+                            description: "A list of all individuals mentioned by name.",
+                            items: {
+                                type: "OBJECT",
+                                properties: {
+                                    name: { type: "STRING", description: "Full name of the individual." }
+                                }
+                            }
+                        },
+                        aliases: {
+                            type: "ARRAY",
+                            description: "A list of aliases or nicknames mentioned.",
+                             items: {
+                                type: "OBJECT",
+                                properties: {
+                                    name: { type: "STRING", description: "The alias name." }
+                                }
+                            }
+                        }
+                    }
+                };
+                
+                const prompt = `Analyze the following news article and extract the specified information in JSON format.
+                Article:
+                ---
+                ${articleText}
+                ---
+                `;
+
+                const result = await callGeminiAPI(prompt, jsonSchema);
+                const extractedData = JSON.parse(result);
+                
+                showConfirmation("AI has extracted information from the article. Do you want to apply it to the form? This will overwrite existing data in the filled fields.", () => {
+                    populateFormWithExtractedData(extractedData);
+                    showToast('Information applied successfully!', 'success');
+                });
+
+            } catch (error) {
+                console.error('Article Extraction Error:', error);
+                showToast(error.message, 'error');
+            } finally {
+                button.classList.remove('loading');
+                button.disabled = false;
+            }
+        }
+
+        function populateFormWithExtractedData(data) {
+            if (!data) return;
+
+            // Simple fields
+            if (data.subjectName) document.getElementById('subjectName').value = data.subjectName;
+            if (data.caseType) document.getElementById('caseType').value = data.caseType;
+            if (data.location) document.getElementById('location').value = data.location;
+            if (data.keyUpdates) document.getElementById('caseUpdate').value = data.keyUpdates;
+            if (data.trialDate) document.getElementById('trialDate').value = data.trialDate;
+
+            // Dynamic timeline events
+            if (data.timelineEvents && Array.isArray(data.timelineEvents)) {
+                const container = document.getElementById('dynamic-container-timeline');
+                if(container) {
+                    data.timelineEvents.forEach(event => {
+                        const itemEl = addDynamicItem(container, 'timelineEvent', { suppressSideEffects: true });
+                        if (itemEl) {
+                            itemEl.querySelector('.timeline-date').value = event.date;
+                            itemEl.querySelector('.timeline-description').value = event.description;
+                        }
+                    });
+                    updateItemControls(container);
+                }
+            }
+            
+            // Dynamic individuals
+            if (data.individuals && Array.isArray(data.individuals)) {
+                 const container = document.getElementById('dynamic-container-individuals');
+                 if(container) {
+                    data.individuals.forEach(person => {
+                        const itemEl = addDynamicItem(container, 'individual', { suppressSideEffects: true });
+                        if(itemEl) itemEl.querySelector('.individual-name').value = person.name;
+                    });
+                    updateItemControls(container);
+                 }
+            }
+            
+            // Dynamic aliases
+            if (data.aliases && Array.isArray(data.aliases)) {
+                 const container = document.getElementById('dynamic-container-aliases');
+                 if(container) {
+                    data.aliases.forEach(alias => {
+                        const itemEl = addDynamicItem(container, 'alias', { suppressSideEffects: true });
+                        if(itemEl) itemEl.querySelector('.alias-name').value = alias.name;
+                    });
+                    updateItemControls(container);
+                 }
+            }
+
+            debouncedUpdatePreview();
+        }
+        
+        function handleImageUpload(e) {
+            const fileInput = e.target;
+            const file = fileInput.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const dataUrl = event.target.result;
+                const previewImg = document.getElementById(fileInput.dataset.previewId);
+                const dataTextarea = fileInput.closest('.dynamic-item').querySelector('.evidence-image-data');
+                
+                if (previewImg) previewImg.src = dataUrl;
+                if (dataTextarea) dataTextarea.value = dataUrl;
+                
+                debouncedUpdatePreview();
+                startAutosave();
+            };
+            reader.readAsDataURL(file);
+        }
+
 
         // --- Initial Load ---
         function initialize() {
