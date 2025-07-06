@@ -1,4 +1,4 @@
-# Simple workflow for deploying static content to GitHub Pages
+# Simple workflow to deploy static content to GitHub Pages
 name: Deploy static content to Pages
 
 on:
@@ -31,13 +31,24 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Replace API Key Placeholder
+        run: |
+          # Use sed to replace the placeholder with the actual secret key
+          # The -i flag edits the file in-place.
+          sed -i "s|__GEMINI_API_KEY_PLACEHOLDER__|${{ secrets.GEMINI_API_KEY }}|g" index.html
+        # This env block makes the secret available to the run step
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # Upload entire repository
+          # Upload entire repository (including the modified index.html)
           path: '.'
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
