@@ -107,7 +107,8 @@
         .ai-rewrite-menu { min-width: 150px; }
         .ai-rewrite-menu a { padding: 8px 12px; }
 
-        /* Dark Mode Toggle */
+        /* Dark Mode Toggle & Settings */
+        .header-controls { display: flex; align-items: center; gap: 1rem; position: absolute; top: 0; right: 0; }
         .theme-switch-wrapper { display: flex; align-items: center; gap: 0.5rem; }
         .theme-switch { display: inline-block; height: 24px; position: relative; width: 48px; }
         .theme-switch input { display:none; }
@@ -117,6 +118,8 @@
         input:checked + .slider:before { transform: translateX(24px); }
         .slider.round { border-radius: 34px; }
         .slider.round:before { border-radius: 50%; }
+        #settingsBtn { background: none; border: none; cursor: pointer; color: var(--text-secondary); font-size: 1.5rem; }
+        #settingsBtn:hover { color: var(--text-primary); }
 
         /* Category Manager */
         .category-manager-item { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 0.375rem; }
@@ -138,13 +141,15 @@
             <header class="text-center mb-8 relative">
                 <h1 class="text-4xl font-bold text-headings">Blacklist Post Generator</h1>
                 <p class="text-lg text-secondary mt-2">Create, format, and manage social media alerts with autosave and AI.</p>
-                <div class="absolute top-0 right-0 theme-switch-wrapper">
-                    <span class="text-sm font-medium text-secondary">☀️</span>
-                    <label class="theme-switch" for="theme-toggle">
-                        <input type="checkbox" id="theme-toggle" />
-                        <span class="slider round"></span>
-                    </label>
-                    <span class="text-sm font-medium text-secondary">🌙</span>
+                <div class="header-controls">
+                    <div class="theme-switch-wrapper">
+                        <span class="text-sm font-medium text-secondary">☀️</span>
+                        <label class="theme-switch" for="theme-toggle">
+                            <input type="checkbox" id="theme-toggle" />
+                            <span class="slider round"></span>
+                        </label>
+                        <span class="text-sm font-medium text-secondary">🌙</span>
+                    </div>
                 </div>
             </header>
 
@@ -237,7 +242,7 @@
     <div id="categoryManagerModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="categoryManagerModalTitle"><div class="modal-content"><button class="close-button" id="closeCategoryManagerModal" aria-label="Close modal">&times;</button><h2 id="categoryManagerModalTitle" class="text-2xl font-bold mb-4 text-headings">Manage Categories</h2><div id="categoryList" class="space-y-2 max-h-80 overflow-y-auto"></div><div class="mt-6 pt-4 border-t border-border-color flex flex-col gap-2"><button id="addNewCategoryBtn" class="action-btn w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg">Add New Category</button><button id="saveCategoryChangesBtn" class="action-btn w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">Save and Close</button></div></div></div>
     <div id="selectiveExportModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="selectiveExportModalTitle"><div class="modal-content"><button class="close-button" id="closeSelectiveExportModal" aria-label="Close modal">&times;</button><h2 id="selectiveExportModalTitle" class="text-2xl font-bold mb-4 text-headings">Selective Export</h2><p class="text-secondary mb-4">Choose which categories to include in the export.</p><div id="selectiveExportCategoryList" class="space-y-2"></div><div class="mt-6 pt-4 border-t border-border-color flex gap-2"><button id="performSelectiveExportBtn" class="action-btn w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">Export Selected</button></div></div></div>
     <div id="aiReviewModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="aiReviewModalTitle"><div class="modal-content"><button class="close-button" id="closeAiReviewModal" aria-label="Close modal">&times;</button><h2 id="aiReviewModalTitle" class="text-2xl font-bold mb-4 text-headings">🤖 AI Sanity Check</h2><div id="aiReviewResult" class="text-primary space-y-4"><p class="text-secondary">AI is reviewing your post...</p></div></div></div>
-
+    
     <script>
     document.addEventListener('DOMContentLoaded', () => {
         // --- App State ---
@@ -250,6 +255,7 @@
         const VERSIONS_PREFIX = 'blacklistPostVersions_';
         const AUTOSAVE_KEY = 'blacklistGeneratorAutosave';
         const THEME_KEY = 'blacklistGeneratorTheme';
+        const API_KEY_LS_KEY = 'blacklistGeneratorApiKey';
         let autosaveInterval;
         let _confirmCallbacks = { onConfirm: null, onCancel: null };
 
@@ -1033,11 +1039,44 @@
         }
 
         // --- Gemini AI Functions ---
+        function getApiKey() {
+            // This placeholder will be replaced by the GitHub Action
+            const apiKey = "__GEMINI_API_KEY_PLACEHOLDER__";
+            // For local development, it will use the key from local storage.
+            if (apiKey.includes('PLACEHOLDER')) {
+                return localStorage.getItem(API_KEY_LS_KEY);
+            }
+            return apiKey;
+        }
+
+        function ensureApiKey() {
+            const key = getApiKey();
+            if (!key || key.includes('PLACEHOLDER')) {
+                showToast('Please set your Gemini API key for local development.', 'info');
+                // The settings button was removed for the deployed version, but we can keep the modal logic for local use.
+                const settingsModal = document.getElementById('apiKeyModal');
+                if (settingsModal) {
+                    openModal(settingsModal);
+                } else {
+                     // Fallback for local development if the modal was also removed
+                    const userKey = prompt("Please enter your Gemini API key for local testing:");
+                    if (userKey) {
+                        localStorage.setItem(API_KEY_LS_KEY, userKey);
+                        return true;
+                    }
+                }
+                return false;
+            }
+            return true;
+        }
+
         async function handleAIAssist(type, element, button) {
+            if (!ensureApiKey()) return;
+
             let prompt = '';
             let content = element.value;
 
-            if (!content) { 
+            if (type !== 'suggest' && !content) { 
                 showToast('There is no text to rewrite.', 'info'); 
                 return;
             }
@@ -1047,12 +1086,6 @@
 
             try {
                 switch (type) {
-                    case 'summarize':
-                        prompt = `Summarize the following text for a social media alert post. Be concise and informative:\n\n${content}`;
-                        break;
-                    case 'expand':
-                        prompt = `Expand on the following points, writing them out in a narrative or descriptive paragraph suitable for a social media alert post:\n\n${content}`;
-                        break;
                     case 'suggest':
                         content = generatePostText();
                         if (!content) { showToast('Please write some content before suggesting hashtags.', 'info'); return; }
@@ -1087,7 +1120,10 @@
         }
 
         async function callGeminiAPI(prompt, jsonSchema = null) {
-            const apiKey = ""; // This will be handled by the environment
+            const apiKey = getApiKey();
+            if (!apiKey || apiKey.includes('PLACEHOLDER')) {
+                throw new Error("API Key not set. Please set it for local development.");
+            }
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
             
             const payload = {
@@ -1109,7 +1145,8 @@
 
             if (!response.ok) {
                 const errorBody = await response.json();
-                throw new Error(`API request failed: ${errorBody.error?.message || 'Unknown network error'}`);
+                const errorMessage = errorBody.error?.message || 'Unknown network error';
+                throw new Error(`API request failed: ${errorMessage}`);
             }
 
             const result = await response.json();
@@ -1466,6 +1503,8 @@
         }
 
         async function handleArticleExtraction() {
+            if (!ensureApiKey()) return;
+
             const url = document.getElementById('articleUrlInput').value;
             if (!url) {
                 showToast('Please enter a URL.', 'info');
@@ -1628,6 +1667,8 @@
         }
 
         async function runSanityCheck() {
+            if (!ensureApiKey()) return;
+            
             const button = document.getElementById('aiReviewBtn');
             const resultContainer = document.getElementById('aiReviewResult');
             
@@ -1638,7 +1679,8 @@
 
             const data = getFormData();
             const issues = [];
-            const today = new Date('2025-07-07T00:00:00'); // Use a fixed date for consistent testing
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
 
             // Check 1: Individuals vs Aliases
             const individualsCount = data.categories.individuals?.length || 0;
@@ -1651,8 +1693,7 @@
             const trialDateStr = data.categories.mainInfo?.trialDate;
             if (trialDateStr) {
                 try {
-                    // Attempt to parse various date formats
-                    const trialDate = new Date(trialDateStr);
+                    const trialDate = new Date(trialDateStr + 'T00:00:00');
                     if (!isNaN(trialDate.getTime()) && trialDate < today) {
                         issues.push(`The trial/hearing date "${trialDateStr}" appears to be in the past. Please verify if this is correct or if it should be a future date.`);
                     }
