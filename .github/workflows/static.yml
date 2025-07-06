@@ -37,8 +37,6 @@ jobs:
         # The key is only used during this deployment process and is not stored in the code.
         run: |
           sed -i "s|__GEMINI_API_KEY_PLACEHOLDER__|${{ secrets.GEMINI_API_KEY }}|g" index.html
-        env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
