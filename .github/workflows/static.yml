@@ -33,11 +33,10 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Replace API Key Placeholder
+        # This step securely replaces the placeholder in index.html with the secret API key.
+        # The key is only used during this deployment process and is not stored in the code.
         run: |
-          # Use sed to replace the placeholder with the actual secret key
-          # The -i flag edits the file in-place.
           sed -i "s|__GEMINI_API_KEY_PLACEHOLDER__|${{ secrets.GEMINI_API_KEY }}|g" index.html
-        # This env block makes the secret available to the run step
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
 
